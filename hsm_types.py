@@ -1,9 +1,9 @@
 class State:
-    states = dict()
-
     """
     Object that responsible for storing state information
     """
+    states = dict()
+
     def __init__(self, name, parent=None, comment=None):
         if parent is not None and name == '[*]':
             self.name = parent.name
@@ -13,7 +13,24 @@ class State:
             self.name = name
             self.parent = parent
             self.comment = comment
-            State.states[name] = self
+            State.states[str(self)] = self
+
+    def is_child_of(self, state):
+        parent = self.parent
+        while parent is not None:
+            if parent == state:
+                return True
+            else:
+                parent = parent.parent
+        else:
+            return False
+
+    def __str__(self):
+        result = ""
+        if self.parent is not None:
+            result += str(self.parent) + '.'
+        result += self.name
+        return result
 
     def __eq__(self, other):
         return other is not None and \
@@ -28,10 +45,15 @@ class State:
 
 
 class Transition:
-    def __init__(self, from_state, to_state, comment=None):
+    """
+    Object that responsible for storing transition information:
+        Event, Action, Condition
+    """
+    def __init__(self, from_state, to_state, event=None, action=None):
         self.from_state = from_state
         self.to_state = to_state
-        self.comment = comment
+        self.event = event
+        self.action = action
 
     def __eq__(self, other):
         return other is not None and \
@@ -46,18 +68,31 @@ class Transition:
 
 
 class Event:
-    def __init__(self, name):
-        pass
+    """
+    Object that responsible for storing event information:
+        State owner
+    """
+    def __init__(self, name, owner=None):
+        self.name = name
+        self.owner = owner
+
+    def __str__(self):
+        result = ""
+        if self.owner is not None:
+            result += str(self.owner) + '.'
+        result += self.name
+        return result
 
 
 class Action:
-    def __init__(self, name):
-        pass
+    def __init__(self, name, *args):
+        self.name = name
 
 
 class Attribute:
     def __init__(self, name, type):
-        pass
+        self.name = name
+        self.type = type
 
 
 class Operation:

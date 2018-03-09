@@ -1,8 +1,8 @@
 import copy
 import regex as re
 
-from hsm_types import State, Transition
-
+from exceptions import ValidationError
+from hsm_types import State, Transition, Event, Action
 
 test_uml = '''
 @startuml
@@ -20,7 +20,7 @@ state "Not Shooting State" as NotShooting {
       state "Idle mode" as Idle
       state "Configuring mode" as Configuring
       [*] --> Idle
-      Idle --> Configuring : EvConfig
+      Idle --> Configuring : NotShooting.EvConfig
       Configuring --> Idle : EvConfig
   }
   
@@ -63,11 +63,11 @@ __transition_regex = r"(?P<state_from>" + __state_name_regex + r")\s*?" + \
                      r"(\s*:\s*(?P<comment>.+))?"
 __transition = re.compile(__transition_regex)
 __event_regex = r"(?P<event>[\.\w]+)"
-__action_regex = r"(?P<action>(?P<action_name>\w+)\s*\(\s*(?P<action_args>.*)\s*\))"
+__action_regex = r"(?P<action_name>[\.\w]+)\s*\(\s*(?P<action_args>.*)\s*\)"
 __condition_regex = r"\[\s*(?P<condition>.*)\s*\]"
-__transition_meta_info_regex = __event_regex + r"\s*\/\s*" + \
-                               __action_regex + r"\s*" + \
-                               __condition_regex
+__transition_meta_info_regex = __event_regex + r"\s*\/?\s*" + \
+                               r"(" + __action_regex + r")?\s*" + \
+                               r"(" + __condition_regex + r")?"
 __transition_meta_info = re.compile(__transition_meta_info_regex)
 
 __comment_regex = r"(\<\*\*(?P<comment>(\<\*\*(*PRUNE)(*FAIL)|.|\n)*?)\*\*\>)?"
@@ -91,7 +91,28 @@ def parse_transition(instructions, parent_state=None):
         from_state_name = transition.group('state_from')
         to_state_name = transition.group('state_to')
         comment = transition.group('comment')
-        # __transition_meta_info.finditer(comment)
+        event = None
+        action = None
+        if comment is not None:
+            transition_meta_info_meta = __transition_meta_info.match(comment)
+            if transition_meta_info_meta is not None:
+                full_event_name = transition_meta_info_meta.group('event')
+                owner_state = None
+                index = str.rfind(full_event_name, '.')
+                event_name = full_event_name[index+1:]
+                if index != -1:
+                    full_state_name = full_event_name[:index]
+                    if full_state_name == '':
+                        owner_state = parent_state
+                    else:
+                        state = State.states[full_state_name]
+                        if parent_state == state or parent_state.is_child_of(state):
+                            owner_state = state
+                        else:
+                            raise ValidationError()
+                event = Event(event_name, owner_state)
+                action_name = transition_meta_info_meta.group('action_name')
+                action = Action(action_name)
         from_state = State(from_state_name, parent_state)
         if from_state in states:
             states.remove(from_state)
@@ -104,7 +125,7 @@ def parse_transition(instructions, parent_state=None):
             states.add(to_state)
         else:
             states.add(to_state)
-        transitions.add(Transition(from_state, to_state, comment))
+        transitions.add(Transition(from_state, to_state, event, action))
     return states, transitions
 
 
@@ -161,6 +182,7 @@ for state in states:
     print("State comment is " + str(state.comment))
     print("=================")
 for transition in transitions:
-    print("Transition from: " + str(transition.from_state.name))
-    print("Transition to: " + str(transition.to_state.name))
-    print("Transition comment: " + str(transition.comment))
+    print("Transition from: " + str(transition.from_state))
+    print("Transition to: " + str(transition.to_state))
+    print("Transition event: " + str(transition.event))
+    print("Transition action: " + str(transition.action))
