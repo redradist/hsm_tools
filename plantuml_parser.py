@@ -1,47 +1,10 @@
 import copy
 import regex as re
+import json
 
 from exceptions import ValidationError
 from hsm_types import State, Transition, Event, Action
 
-test_uml = '''
-@startuml
-
-[*] --> State1
-State1 --> [*]
-State1 : this is a string
-State1 : this is another string
-
-state "Not Shooting State" as NotShooting {
-  state "Idle mode" as Idle
-  state "Configuring mode" as Configuring
-  
-  state "Not Shooting State" as NotShooting3 {
-      state "Idle mode" as Idle
-      state "Configuring mode" as Configuring
-      [*] --> Idle
-      Idle --> Configuring : NotShooting.EvConfig
-      Configuring --> Idle : EvConfig
-  }
-  
-  [*] --> Idle
-  Idle --> Configuring : EvConfig
-  Configuring --> Idle : EvConfig
-}
-
-state "Not Shooting State" as NotShooting2 {
-  state "Idle mode" as Idle
-  state "Configuring mode" as Configuring
-  [*] --> Idle
-  Idle --> Configuring : EvConfig / Action() [ int > k ]
-  Configuring --> Idle : EvConfig
-}
-
-State1 -> State2
-State2 --> [*]
-
-@enduml
-'''
 
 __state_declaration_regex = r"((?P<comment>\".*\")\s*as\s+)?\s*?(?P<name>\w+)\s*"
 __state_declaration = re.compile(__state_declaration_regex)
@@ -96,23 +59,38 @@ def parse_transition(instructions, parent_state=None):
         if comment is not None:
             transition_meta_info_meta = __transition_meta_info.match(comment)
             if transition_meta_info_meta is not None:
-                full_event_name = transition_meta_info_meta.group('event')
                 owner_state = None
-                index = str.rfind(full_event_name, '.')
-                event_name = full_event_name[index+1:]
-                if index != -1:
-                    full_state_name = full_event_name[:index]
-                    if full_state_name == '':
-                        owner_state = parent_state
-                    else:
-                        state = State.states[full_state_name]
-                        if parent_state == state or parent_state.is_child_of(state):
-                            owner_state = state
+                full_event_name = transition_meta_info_meta.group('event')
+                if full_event_name is not None:
+                    index = str.rfind(full_event_name, '.')
+                    event_name = full_event_name[index+1:]
+                    if index != -1:
+                        full_state_name = full_event_name[:index]
+                        if full_state_name == '':
+                            owner_state = parent_state
                         else:
-                            raise ValidationError()
-                event = Event(event_name, owner_state)
-                action_name = transition_meta_info_meta.group('action_name')
-                action = Action(action_name)
+                            state = State.states[full_state_name]
+                            if parent_state == state or parent_state.is_child_of(state):
+                                owner_state = state
+                            else:
+                                raise ValidationError()
+                    event = Event(event_name, owner_state)
+                owner_state = None
+                full_action_name = transition_meta_info_meta.group('action_name')
+                if full_action_name is not None:
+                    index = str.rfind(full_action_name, '.')
+                    action_name = full_action_name[index+1:]
+                    if index != -1:
+                        full_state_name = full_action_name[:index]
+                        if full_state_name == '':
+                            owner_state = parent_state
+                        else:
+                            state = State.states[full_state_name]
+                            if parent_state == state or parent_state.is_child_of(state):
+                                owner_state = state
+                            else:
+                                raise ValidationError()
+                    action = Action(action_name, owner_state)
         from_state = State(from_state_name, parent_state)
         if from_state in states:
             states.remove(from_state)
@@ -131,7 +109,7 @@ def parse_transition(instructions, parent_state=None):
 
 def parse_instructions(instructions, parent_state=None):
     """
-
+    Parsing the platuml
     :param instructions:
     :param parent_state:
     :return:
@@ -159,30 +137,33 @@ def parse_instructions(instructions, parent_state=None):
     return states, transitions
 
 
-def parse_uml(plantuml_file):
+def parse_uml_file(file_name):
     """
-
-    :param plantuml_file:
-    :return:
+    Function for parsing PlantUML State Machine
+    :param file_name: Name of file with State Machine
+    :return: states, transitions: State and Transitions of State Machine
     """
-    with open(plantuml_file, 'r') as file:
-        instructions = file.readlines()
-        instructions = "".join(instructions)
+    with open(file_name, 'r') as file:
+        instructions = file.read()
         return parse_instructions(instructions)
 
 
-states, transitions = parse_instructions(test_uml)
-for state in states:
-    print("=================")
-    print("State name is " + state.name)
-    if state.parent is not None:
-        print("State parent is " + str(state.parent))
-        print("State parent name is " + str(state.parent.name))
-        print("State parent comment is " + str(state.parent.comment))
-    print("State comment is " + str(state.comment))
-    print("=================")
-for transition in transitions:
-    print("Transition from: " + str(transition.from_state))
-    print("Transition to: " + str(transition.to_state))
-    print("Transition event: " + str(transition.event))
-    print("Transition action: " + str(transition.action))
+if __name__ == '__main__':
+    states, transitions = parse_uml_file('./TestFSM.txt')
+    for state in states:
+        print("=================")
+        print("State name is " + state.name)
+        if state.parent_state is not None:
+            print("State parent is " + str(state.parent_state))
+            print("State parent name is " + str(state.parent_state.name))
+            print("State parent comment is " + str(state.parent_state.comment))
+        print("State comment is " + str(state.comment))
+        print("=================")
+    for transition in transitions:
+        print("Transition from: " + str(transition.from_state))
+        print("Transition to: " + str(transition.to_state))
+        print("Transition event: " + str(transition.event))
+        print("Transition action: " + str(transition.action))
+
+    # from subprocess import call
+    # call(['java', '-jar', './plantuml.jar'])
