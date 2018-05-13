@@ -137,6 +137,12 @@ class ExpressionParser:
                 if len(self._expressions) > 0 and type(self._expressions[-1]) == Function:
                     func = self._expressions[-1]
                     func.body = ''.join(self.temp)
+                elif len(self._expressions) > 0 and type(self._expressions[-1]) == Group:
+                    args = self._expressions[-1]
+                    anon_func = Function(None)
+                    anon_func.args = args
+                    anon_func.body = ''.join(self.temp)
+                    self._expressions[-1] = anon_func
                 else:
                     raise ValidationError()
                 self.temp = []
