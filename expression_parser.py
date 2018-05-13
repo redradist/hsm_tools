@@ -1,12 +1,14 @@
-from hsm_types import Value, Attribute, Operator, Indexer, Group, String, Function, Object
+import operator
+
+from hsm_types import Value, Attribute, Operator, Indexer, Group, String, Function, Object, Expression
 from exceptions import ValidationError
 
 
 class ExpressionParser:
     def __init__(self, statement):
         self._statement = statement
-        self._expression = []
-        self._subexpressions = []
+        self._expression = Expression()
+        self._subexpressions = Expression()
 
     _operators = [ '=', '==', '===', '!=', '!==',
                    '>', '>=', '<', '<=', '&', '&&',
@@ -70,6 +72,7 @@ class ExpressionParser:
         elif not ch.isalpha():
             self._expression.append(Value(''.join(self.temp)))
             self.temp = []
+            self._parse_expression(ch)
         else:
             raise ValidationError()
 
@@ -91,7 +94,7 @@ class ExpressionParser:
             indexer = self._expression[-1]
             parser = ExpressionParser(''.join(self.temp))
             indexer.parts = parser.parse()
-            if len(indexer.parts) == 0:
+            if not indexer.parts:
                 raise ValidationError()
             self.temp = []
 
@@ -100,8 +103,8 @@ class ExpressionParser:
         if ch == ')':
             del self.temp[0]
             del self.temp[-1]
-            parser = ExpressionParser(self.temp)
-            self._expression[-1].args = parser.parse()
+            parser = ExpressionParser(''.join(self.temp))
+            self._expression[-1].args = list(parser.parse())
             self.temp = []
 
     def parse_group(self, ch):
@@ -157,7 +160,7 @@ class ExpressionParser:
         if ch == ',':
             contexts.append('Comma')
             self._subexpressions.append(self._expression)
-            self._expression = []
+            self._expression = Expression()
         elif self.is_first_name_letter(ch):
             contexts.append('Text')
             if len(self._expression) == 0 or \
@@ -218,24 +221,52 @@ class ExpressionParser:
         else:
             self._handle_letter(ch)
 
+    def _simplify_expression(self, saver, expression):
+        if expression and type(expression) == Expression:
+            if len(expression) == 1:
+                saver(expression[0])
+            else:
+                index = 0
+                first_entry = False
+                for subexpr in expression:
+                    if not first_entry:
+                        first_entry = True
+                    else:
+                        index += 1
+                    self._simplify_expression(lambda obj: expression.__setitem__(index, obj), subexpr)
+        return
+
+    @property
+    def expressions(self):
+        if len(self._subexpressions) > 0:
+            if len(self._expression) > 0:
+                self._subexpressions.append(self._expression)
+                self._expression = Expression()
+            self._simplify_expression(lambda obj: setattr(self, '_subexpressions', obj),
+                                      self._subexpressions)
+            return self._subexpressions
+        else:
+            self._simplify_expression(lambda obj: setattr(self, '_expression', obj),
+                                      self._expression)
+            return self._expression
+
     def parse(self):
         self.contexts = []
         self.temp = []
         for ch in self._statement:
             self._parse_expression(ch)
 
-        # Currently workaround to finish parsing statement
+        # NOTE(redrad): Currently workaround to finish parsing statement
         self._parse_expression(' ')
-        if len(self._subexpressions) > 0:
-            if len(self._expression) > 0:
-                self._subexpressions.append(self._expression)
-                self._expression = []
-            return self._subexpressions
-        else:
-            return self._expression
+        return self.expressions
 
 
 if __name__ == '__main__':
+    example = 'MyNameSpace::isAction(arg0 == 1, arg1) == k'
+    parser = ExpressionParser(example)
+    condition = parser.parse()
+    print(condition)
+
     example = 'MyNameSpace::isAction(arg0, arg1) == k'
     parser = ExpressionParser(example)
     condition = parser.parse()

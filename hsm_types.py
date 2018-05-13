@@ -5,6 +5,12 @@ class Expression:
     def __init__(self):
         self._items = []
 
+    def append(self, value):
+        self._items.append(value)
+
+    def remove(self, value):
+        self._items.remove(value)
+
     def __iter__(self):
         return iter(self._items)
 
@@ -22,6 +28,9 @@ class Expression:
             raise ValueError('key index is bigger than items in Expression')
 
         return self._items[key]
+
+    def __len__(self):
+        return len(self._items)
 
     def __str__(self):
         result = ""
