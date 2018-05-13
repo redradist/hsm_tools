@@ -1,6 +1,6 @@
 import unittest
 
-from hsm_types import Operator, Attribute, Indexer, Value, Function, String, Object, Expression
+from hsm_types import Operator, Attribute, Indexer, Value, Function, String, Object, Expression, Group
 from expression_parser import ExpressionParser
 from exceptions import ValidationError
 
@@ -13,6 +13,44 @@ class TestingExpressionParser(unittest.TestCase):
     def tearDown(self):
         """Currently nothing to do. Use it for reinitialization data after test"""
         pass
+
+    def test__Group_of_OperatorVariable_AND_Variable__Valid(self):
+        example = "(++k && l)"
+        parser = ExpressionParser(example)
+        expression = parser.parse()
+        self.assertEqual(type(expression), Group)
+        self.assertEqual(len(expression), 4)
+        self.assertEqual(type(expression[0]), Operator)
+        self.assertEqual(expression[0].name, '++')
+        self.assertEqual(type(expression[1]), Attribute)
+        self.assertEqual(expression[1].name, 'k')
+        self.assertEqual(type(expression[2]), Operator)
+        self.assertEqual(expression[2].name, '&&')
+        self.assertEqual(type(expression[3]), Attribute)
+        self.assertEqual(expression[3].name, 'l')
+
+    def test__Group_of_Group_of_OperatorVariable_AND_Variable__Valid(self):
+        example = "((++k && l))"
+        parser = ExpressionParser(example)
+        expression = parser.parse()
+        self.assertEqual(type(expression), Group)
+        subexpression = expression[0]
+        self.assertEqual(type(subexpression), Group)
+        self.assertEqual(len(subexpression), 4)
+        self.assertEqual(type(subexpression[0]), Operator)
+        self.assertEqual(subexpression[0].name, '++')
+        self.assertEqual(type(subexpression[1]), Attribute)
+        self.assertEqual(subexpression[1].name, 'k')
+        self.assertEqual(type(subexpression[2]), Operator)
+        self.assertEqual(subexpression[2].name, '&&')
+        self.assertEqual(type(subexpression[3]), Attribute)
+        self.assertEqual(subexpression[3].name, 'l')
+
+    def test__Group_of_Group_of_OperatorVariable_AND_Variable__Invalid(self):
+        example = "({++k && l})"
+        parser = ExpressionParser(example)
+        with self.assertRaises(ValidationError) as context:
+            parser.parse()
 
     def test__OperatorVariable_AND_Variable__Valid(self):
         example = "++k && l"
@@ -27,6 +65,12 @@ class TestingExpressionParser(unittest.TestCase):
         self.assertEqual(expression[2].name, '&&')
         self.assertEqual(type(expression[3]), Attribute)
         self.assertEqual(expression[3].name, 'l')
+
+    def test__OperatorVariable_AND_Variable__Invalid(self):
+        example = "{++k && l}"
+        parser = ExpressionParser(example)
+        with self.assertRaises(ValidationError) as context:
+            parser.parse()
 
     def test__VariableOperator_AND_Variable__Valid(self):
         example = "k++ && l"
@@ -167,6 +211,30 @@ class TestingExpressionParser(unittest.TestCase):
         self.assertEqual(type(expression[2]), Attribute)
         self.assertEqual(expression[2].name, 'l')
 
+    def test__VariableComplexIndexer_AND_Variable__Valid(self):
+        example = 'k[arr[1]] && l'
+        parser = ExpressionParser(example)
+        expression = parser.parse()
+        self.assertEqual(len(expression), 3)
+        self.assertEqual(type(expression[0]), Indexer)
+        self.assertEqual(type(expression[0].attribute), Attribute)
+        self.assertEqual(expression[0].attribute.name, 'k')
+        self.assertEqual(type(expression[0].expression), Indexer)
+        self.assertEqual(type(expression[0].expression.attribute), Attribute)
+        self.assertEqual(expression[0].expression.attribute.name, 'arr')
+        self.assertEqual(type(expression[0].expression.expression), Value)
+        self.assertEqual(expression[0].expression.expression.value, '1')
+        self.assertEqual(type(expression[1]), Operator)
+        self.assertEqual(expression[1].name, '&&')
+        self.assertEqual(type(expression[2]), Attribute)
+        self.assertEqual(expression[2].name, 'l')
+
+    def test__VariableComplexIndexer_AND_Variable__Invalid(self):
+        example = 'k[{arr[1]}] && l'
+        parser = ExpressionParser(example)
+        with self.assertRaises(ValidationError) as context:
+            parser.parse()
+
     def test_Variable_AND_VariableIndexer__Valid(self):
         example = 'k && l[1]'
         parser = ExpressionParser(example)
@@ -179,6 +247,25 @@ class TestingExpressionParser(unittest.TestCase):
         self.assertEqual(type(expression[2]), Indexer)
         self.assertEqual(type(expression[2].attribute), Attribute)
         self.assertEqual(expression[2].attribute.name, 'l')
+
+    def test_Variable_AND_VariableComplexIndexer__Valid(self):
+        example = 'k && l[getIndex() { return 1; }]'
+        parser = ExpressionParser(example)
+        expression = parser.parse()
+        self.assertEqual(len(expression), 3)
+        self.assertEqual(type(expression[0]), Attribute)
+        self.assertEqual(expression[0].name, 'k')
+        self.assertEqual(type(expression[1]), Operator)
+        self.assertEqual(expression[1].name, '&&')
+        self.assertEqual(type(expression[2]), Indexer)
+        self.assertEqual(type(expression[2].attribute), Attribute)
+        self.assertEqual(expression[2].attribute.name, 'l')
+
+    def test_Variable_AND_VariableIndexer__Invalid(self):
+        example = 'k && l[{1}]'
+        parser = ExpressionParser(example)
+        with self.assertRaises(ValidationError) as context:
+            parser.parse()
 
     def test__Variable_OR_Variable__Valid(self):
         example = 'k || l'
@@ -407,6 +494,24 @@ class TestingExpressionParser(unittest.TestCase):
         self.assertEqual(type(expression[2].args[1]), Attribute)
         self.assertEqual(expression[2].args[1].name, 'arg1')
         self.assertEqual(expression[2].body, ' arg0 = arg1; ')
+
+    def test_Variable_EQUAL_ActionArg0Arg1Body_DoubleBraces__Valid(self):
+        example = 'k == isAction(arg0, arg1) { { arg0 = arg1; } }'
+        parser = ExpressionParser(example)
+        expression = parser.parse()
+        self.assertEqual(len(expression), 3)
+        self.assertEqual(type(expression[0]), Attribute)
+        self.assertEqual(expression[0].name, 'k')
+        self.assertEqual(type(expression[1]), Operator)
+        self.assertEqual(expression[1].name, '==')
+        self.assertEqual(type(expression[2]), Function)
+        self.assertEqual(expression[2].name, 'isAction')
+        self.assertEqual(len(expression[2].args), 2)
+        self.assertEqual(type(expression[2].args[0]), Attribute)
+        self.assertEqual(expression[2].args[0].name, 'arg0')
+        self.assertEqual(type(expression[2].args[1]), Attribute)
+        self.assertEqual(expression[2].args[1].name, 'arg1')
+        self.assertEqual(expression[2].body, ' { arg0 = arg1; } ')
 
     def test_Variable_EQUAL_ActionArgExpressionArg1__Valid(self):
         example = 'k == isAction(arg0 == arg2, arg1)'

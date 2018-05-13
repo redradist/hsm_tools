@@ -7,7 +7,7 @@ from exceptions import ValidationError
 class ExpressionParser:
     def __init__(self, statement):
         self._statement = statement
-        self._expression = Expression()
+        self._expressions = Expression()
         self._subexpressions = Expression()
 
     _operators = [ '=', '==', '===', '!=', '!==',
@@ -51,7 +51,7 @@ class ExpressionParser:
         if self.is_name_letter(ch):
             self.temp.append(ch)
         elif len(self.temp) > 0:
-            attrib = self._expression[-1]
+            attrib = self._expressions[-1]
             attrib.name = ''.join(self.temp)
             self.temp = []
             self._parse_expression(ch)
@@ -63,14 +63,14 @@ class ExpressionParser:
             (self.temp[0] == '\"' and ch == '\"')):
             del self.temp[0]
             del self.temp[-1]
-            self._expression.append(String(''.join(self.temp)))
+            self._expressions.append(String(''.join(self.temp)))
             self.temp = []
 
     def parse_number(self, ch):
         if ch.isdigit():
             self.temp.append(ch)
         elif not ch.isalpha():
-            self._expression.append(Value(''.join(self.temp)))
+            self._expressions.append(Value(''.join(self.temp)))
             self.temp = []
             self._parse_expression(ch)
         else:
@@ -80,7 +80,7 @@ class ExpressionParser:
         if self.is_operator_char(ch):
             self.temp.append(ch)
         elif self.is_operator(''.join(self.temp)):
-            self._expression.append(Operator(''.join(self.temp)))
+            self._expressions.append(Operator(''.join(self.temp)))
             self.temp = []
             self._parse_expression(ch)
         else:
@@ -88,15 +88,19 @@ class ExpressionParser:
 
     def parse_indexer(self, ch):
         self.temp.append(ch)
-        if ch == ']':
-            del self.temp[0]
-            del self.temp[-1]
-            indexer = self._expression[-1]
-            parser = ExpressionParser(''.join(self.temp))
-            indexer.parts = parser.parse()
-            if not indexer.parts:
-                raise ValidationError()
-            self.temp = []
+        if ch == '[':
+            self.num_of_open_square_bracket += 1
+        elif ch == ']':
+            self.num_of_open_square_bracket -= 1
+            if self.num_of_open_square_bracket == 0:
+                del self.temp[0]
+                del self.temp[-1]
+                indexer = self._expressions[-1]
+                parser = ExpressionParser(''.join(self.temp))
+                indexer.expression = parser.parse()
+                if not indexer.expression:
+                    raise ValidationError()
+                self.temp = []
 
     def parse_function(self, ch):
         self.temp.append(ch)
@@ -104,36 +108,46 @@ class ExpressionParser:
             del self.temp[0]
             del self.temp[-1]
             parser = ExpressionParser(''.join(self.temp))
-            self._expression[-1].args = list(parser.parse())
+            self._expressions[-1].args = list(parser.parse())
             self.temp = []
 
     def parse_group(self, ch):
         self.temp.append(ch)
-        if ch == ')':
-            del self.temp[0]
-            del self.temp[-1]
-            self._expression.append(Group(self.temp))
-            self.temp = []
+        if ch == '(':
+            self.num_of_open_braces += 1
+        elif ch == ')':
+            self.num_of_open_braces -= 1
+            if self.num_of_open_braces == 0:
+                del self.temp[0]
+                del self.temp[-1]
+                parser = ExpressionParser(''.join(self.temp))
+                expression = parser.parse()
+                self._expressions.append(Group(expression))
+                self.temp = []
 
     def parse_function_body(self, ch):
         self.temp.append(ch)
-        if ch == '}':
-            del self.temp[0]
-            del self.temp[-1]
-            if len(self._expression) > 0 and type(self._expression[-1]) == Function:
-                func = self._expression[-1]
-                func.body = ''.join(self.temp)
-            else:
-                raise ValidationError()
-            self.temp = []
+        if ch == '{':
+            self.num_of_open_perentesis += 1
+        elif ch == '}':
+            self.num_of_open_perentesis -= 1
+            if self.num_of_open_perentesis == 0:
+                del self.temp[0]
+                del self.temp[-1]
+                if len(self._expressions) > 0 and type(self._expressions[-1]) == Function:
+                    func = self._expressions[-1]
+                    func.body = ''.join(self.temp)
+                else:
+                    raise ValidationError()
+                self.temp = []
 
     def parse_object(self, ch):
         self.temp.append(ch)
         if ch == '}':
             del self.temp[0]
             del self.temp[-1]
-            if len(self._expression) > 0 and type(self._expression[-1]) == Function:
-                func = self._expression[-1]
+            if len(self._expressions) > 0 and type(self._expressions[-1]) == Function:
+                func = self._expressions[-1]
                 func.body = ''.join(self.temp)
             else:
                 raise ValidationError()
@@ -159,37 +173,37 @@ class ExpressionParser:
     def _context_analyzer(self, ch, contexts):
         if ch == ',':
             contexts.append('Comma')
-            self._subexpressions.append(self._expression)
-            self._expression = Expression()
+            self._subexpressions.append(self._expressions)
+            self._expressions = Expression()
         elif self.is_first_name_letter(ch):
             contexts.append('Text')
-            if len(self._expression) == 0 or \
-                type(self._expression[-1]) != Attribute or \
-                self._expression[-1].object == None or \
-                self._expression[-1].name != None:
-                self._expression.append(Attribute(None))
+            if len(self._expressions) == 0 or \
+                type(self._expressions[-1]) != Attribute or \
+                self._expressions[-1].object == None or \
+                self._expressions[-1].name != None:
+                self._expressions.append(Attribute(None))
         elif ch.isdigit():
             contexts.append('Number')
         elif self.is_operator_char(ch):
             contexts.append('Operator')
-        elif len(self._expression) > 0 and \
-            type(self._expression[-1]) == Attribute and \
+        elif len(self._expressions) > 0 and \
+            type(self._expressions[-1]) == Attribute and \
             ch == '.':
             contexts.append('Text')
-            old_attrib = self._expression[-1]
+            old_attrib = self._expressions[-1]
             obj = Object(old_attrib.name)
             attrib = Attribute(None)
             attrib.object = obj
-            self._expression[-1] = attrib
-        elif len(self._expression) > 0 and \
-            type(self._expression[-1]) == Attribute and \
+            self._expressions[-1] = attrib
+        elif len(self._expressions) > 0 and \
+            type(self._expressions[-1]) == Attribute and \
             self.is_group_operator(ch):
             contexts[-1] = 'Function'
-            if len(self._expression) > 0 and type(self._expression[-1]) == Attribute:
-                attr = self._expression[-1]
+            if len(self._expressions) > 0 and type(self._expressions[-1]) == Attribute:
+                attr = self._expressions[-1]
                 func = Function(attr.name)
                 func.object = attr.object
-                self._expression[-1] = func
+                self._expressions[-1] = func
         elif self.is_function_body_operator(ch):
             contexts.append('FunctionBody')
         elif self.is_group_operator(ch):
@@ -198,9 +212,9 @@ class ExpressionParser:
             contexts.append('String')
         elif self.is_index_operator(ch):
             contexts.append('Indexer')
-            if len(self._expression) > 0 and type(self._expression[-1]) == Attribute:
-                attr = self._expression[-1]
-                self._expression[-1] = Indexer(attr)
+            if len(self._expressions) > 0 and type(self._expressions[-1]) == Attribute:
+                attr = self._expressions[-1]
+                self._expressions[-1] = Indexer(attr)
             else:
                 raise ValidationError()
         else:
@@ -239,20 +253,23 @@ class ExpressionParser:
     @property
     def expressions(self):
         if len(self._subexpressions) > 0:
-            if len(self._expression) > 0:
-                self._subexpressions.append(self._expression)
-                self._expression = Expression()
+            if len(self._expressions) > 0:
+                self._subexpressions.append(self._expressions)
+                self._expressions = Expression()
             self._simplify_expression(lambda obj: setattr(self, '_subexpressions', obj),
                                       self._subexpressions)
-            return self._subexpressions
+            return self._subexpressions if len(self._subexpressions) != 1 else self._subexpressions[0]
         else:
             self._simplify_expression(lambda obj: setattr(self, '_expression', obj),
-                                      self._expression)
-            return self._expression
+                                      self._expressions)
+            return self._expressions if len(self._expressions) != 1 else self._expressions[0]
 
     def parse(self):
         self.contexts = []
         self.temp = []
+        self.num_of_open_braces = 0
+        self.num_of_open_perentesis = 0
+        self.num_of_open_square_bracket = 0
         for ch in self._statement:
             self._parse_expression(ch)
 

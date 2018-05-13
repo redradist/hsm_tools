@@ -144,9 +144,16 @@ class Action:
         return result
 
 
-class Group:
-    def __init__(self, values):
-        self.values = values
+class Group(Expression):
+    def __init__(self, expression):
+        if type(expression) == Expression:
+            self._items = expression._items
+        else:
+            self._items = [ expression ]
+
+    def __str__(self):
+        result = '(' + ', '.join(str(item) for item in self.items) + ')'
+        return result
 
 
 class Attribute:
@@ -188,7 +195,7 @@ class String:
 class Indexer:
     def __init__(self, attribute):
         self.attribute = attribute
-        self.parts = []
+        self.expression = []
 
 
 class Operator:
