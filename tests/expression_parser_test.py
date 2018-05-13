@@ -331,6 +331,25 @@ class TestingExpressionParser(unittest.TestCase):
         self.assertEqual(type(expression[2].args[1][0]), Attribute)
         self.assertEqual(expression[2].args[1][0].name, 'arg1')
 
+    def test_Variable_EQUAL_NamespaceActionArg0Arg1__Valid(self):
+        example = 'k == MyNamespace::isAction(arg0, arg1)'
+        parser = ExpressionParser(example)
+        expression = parser.parse()
+        self.assertEqual(len(expression), 3)
+        self.assertEqual(type(expression[0]), Attribute)
+        self.assertEqual(expression[0].name, 'k')
+        self.assertEqual(type(expression[1]), Operator)
+        self.assertEqual(expression[1].name, '==')
+        self.assertEqual(type(expression[2]), Function)
+        self.assertEqual(expression[2].name, 'MyNamespace::isAction')
+        self.assertEqual(len(expression[2].args), 2)
+        self.assertEqual(len(expression[2].args[0]), 1)
+        self.assertEqual(type(expression[2].args[0][0]), Attribute)
+        self.assertEqual(expression[2].args[0][0].name, 'arg0')
+        self.assertEqual(len(expression[2].args[1]), 1)
+        self.assertEqual(type(expression[2].args[1][0]), Attribute)
+        self.assertEqual(expression[2].args[1][0].name, 'arg1')
+
     def test_Variable_EQUAL_ActionArg0Arg1Body__Valid(self):
         example = 'k == isAction(arg0, arg1) { arg0 = arg1; }'
         parser = ExpressionParser(example)
@@ -402,6 +421,25 @@ class TestingExpressionParser(unittest.TestCase):
         self.assertEqual(expression[0].name, 'isAction')
         self.assertEqual(type(expression[0].object), Object)
         self.assertEqual(expression[0].object.name, 'name')
+        self.assertEqual(len(expression[0].args), 2)
+        self.assertEqual(len(expression[0].args[0]), 1)
+        self.assertEqual(type(expression[0].args[0][0]), Attribute)
+        self.assertEqual(expression[0].args[0][0].name, 'arg0')
+        self.assertEqual(len(expression[0].args[1]), 1)
+        self.assertEqual(type(expression[0].args[1][0]), Attribute)
+        self.assertEqual(expression[0].args[1][0].name, 'arg1')
+        self.assertEqual(type(expression[1]), Operator)
+        self.assertEqual(expression[1].name, '==')
+        self.assertEqual(type(expression[2]), Attribute)
+        self.assertEqual(expression[2].name, 'k')
+
+    def test__NamespaceActionArg0Arg1_EQUAL_Variable__Valid(self):
+        example = 'MyNamespace::isAction(arg0, arg1) == k'
+        parser = ExpressionParser(example)
+        expression = parser.parse()
+        self.assertEqual(len(expression), 3)
+        self.assertEqual(type(expression[0]), Function)
+        self.assertEqual(expression[0].name, 'MyNamespace::isAction')
         self.assertEqual(len(expression[0].args), 2)
         self.assertEqual(len(expression[0].args[0]), 1)
         self.assertEqual(type(expression[0].args[0][0]), Attribute)

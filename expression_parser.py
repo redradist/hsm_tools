@@ -39,8 +39,14 @@ class ExpressionParser:
     def is_string_operator(self, ch):
         return ch in ['\'', '\"']
 
+    def is_first_name_letter(self, ch):
+        return ch.isalpha() or ch == ':'
+
+    def is_name_letter(self, ch):
+        return ch.isalnum() or ch == ':'
+
     def parse_text(self, ch):
-        if ch.isalnum():
+        if self.is_name_letter(ch):
             self.temp.append(ch)
         elif len(self.temp) > 0:
             attrib = self._expression[-1]
@@ -152,7 +158,7 @@ class ExpressionParser:
             contexts.append('Comma')
             self._subexpressions.append(self._expression)
             self._expression = []
-        elif ch.isalpha():
+        elif self.is_first_name_letter(ch):
             contexts.append('Text')
             if len(self._expression) == 0 or \
                 type(self._expression[-1]) != Attribute or \
@@ -230,6 +236,11 @@ class ExpressionParser:
 
 
 if __name__ == '__main__':
+    example = 'MyNameSpace::isAction(arg0, arg1) == k'
+    parser = ExpressionParser(example)
+    condition = parser.parse()
+    print(condition)
+
     example = 'name.isAction(arg0, arg1) == k'
     parser = ExpressionParser(example)
     condition = parser.parse()
