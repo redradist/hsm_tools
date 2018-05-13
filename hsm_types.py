@@ -1,6 +1,37 @@
 from exceptions import ValidationError
 
 
+class Expression:
+    def __init__(self):
+        self._items = []
+
+    def __iter__(self):
+        return iter(self._items)
+
+    def __contains__(self, item):
+        return item in self._items
+
+    def __setitem__(self, key, value):
+        if key >= len(self._items):
+            raise ValueError('key index is bigger than items in Expression')
+
+        self._items[key] = value
+
+    def __getitem__(self, key):
+        if key >= len(self._items):
+            raise ValueError('key index is bigger than items in Expression')
+
+        return self._items[key]
+
+    def __str__(self):
+        result = ""
+        for item in self._items:
+            if len(result) > 0:
+                result += ' '
+            result += str(item)
+        return result
+
+
 class State:
     """
     Object that responsible for storing state information
@@ -92,6 +123,7 @@ class Action:
     def __init__(self, name, *args, owner=None):
         self.name = name
         self.args = args
+        self.body = None
         self.owner = owner
 
     def __str__(self):
@@ -111,13 +143,13 @@ class Group:
 class Attribute:
     def __init__(self, name):
         self.name = name
-        self.indexer = None
 
 
 class Function:
     def __init__(self, name):
         self.name = name
         self.args = None
+        self.body = None
 
 
 class String:
@@ -130,7 +162,7 @@ class Indexer:
         self.parts = []
 
 
-class Operation:
+class Operator:
     def __init__(self, name):
         self.name = name
 
@@ -141,158 +173,10 @@ class Value:
 
 
 class Condition:
-    def __init__(self, statement, owner=None):
+    def __init__(self, statement, exp_parts, owner=None):
         self.statement = statement
         self.owner = owner
-        self.exp_parts = []
-        self.exp_parts = self.parse(statement)
-
-    def parse(self, statement):
-        exp_parts = []
-        is_parsing_complex = False
-
-        temp = []
-        for ch in statement:
-            if len(temp) == 0 and ch != ' ':
-                temp.append(ch)
-            else:
-                if ''.join(temp).isdigit() and ch.isalpha():
-                    raise ValidationError()
-                elif not ch.isdigit() and not ch.isalpha() and not is_parsing_complex:
-                    parsed_text = ''.join(temp)
-                    if parsed_text.isdigit():
-                        exp_parts.append(Value(parsed_text))
-                        temp = []
-                    elif parsed_text.isalnum():
-                        exp_parts.append(Attribute(parsed_text))
-                        temp = []
-                    elif self.is_single_operator(parsed_text) and \
-                        not self.is_single_operator(ch):
-                        exp_parts.append(Operation(parsed_text))
-                        temp = []
-                    elif self.is_single_operator(ch):
-                        temp.append(ch)
-                else:
-                    temp.append(ch)
-
-                if self.is_index_operator(ch):
-                    if ch == ']' and (len(temp) == 0 or temp[0] != '['):
-                        raise ValidationError()
-                    if not is_parsing_complex:
-                        temp.append(ch)
-                    is_parsing_complex = True
-                    if ch == ']':
-                        is_parsing_complex = False
-                        if len(exp_parts) == 0 or type(exp_parts[-1]) != Attribute:
-                            raise ValidationError()
-                        attr = exp_parts[-1]
-                        del temp[0]; del temp[-1]
-                        new_exp_parts = self.parse(''.join(chr for chr in temp))
-                        if len(new_exp_parts) == 0:
-                            raise ValidationError()
-                        attr.index = Indexer(new_exp_parts)
-                        temp = []
-                elif self.is_group_operator(ch):
-                    if ch == ')' and (len(temp) == 0 or temp[0] != '('):
-                        raise ValidationError()
-                    is_parsing_complex = True
-                    if ch == ')':
-                        is_parsing_complex = False
-                        attr = None
-                        if len(exp_parts) != 0 and type(exp_parts[-1]) == Attribute:
-                            attr = exp_parts[-1]
-                        del temp[0]; del temp[-1]
-                        new_exp_parts = self.parse(''.join(chr for chr in temp))
-                        if attr:
-                            attr.callable_args = new_exp_parts
-                        else:
-                            exp_parts.append(Group(new_exp_parts))
-                        temp = []
-                elif self.is_string_operator(ch):
-                    if ch == '\'' and len(temp) != 0 and temp[0] != '\'':
-                        raise ValidationError()
-                    if ch == '\"' and len(temp) != 0 and temp[0] != '\"':
-                        raise ValidationError()
-                    is_parsing_complex = True
-                    if (temp[0] != '\'' and ch == '\'') or \
-                       (temp[0] != '\"' and ch == '\"'):
-                        is_parsing_complex = False
-                        exp_parts.append(Attribute(temp))
-                        temp = []
-
-        parsed_text = ''.join(temp)
-        if parsed_text.isdigit():
-            exp_parts.append(Value(parsed_text))
-        elif parsed_text.isalnum():
-            exp_parts.append(Attribute(parsed_text))
-        elif self.is_single_operator(parsed_text) and \
-                not self.is_single_operator(ch):
-            exp_parts.append(Operation(parsed_text))
-        elif self.is_index_operator(ch):
-            if ch == ']' and (len(temp) == 0 or temp[0] != '['):
-                raise ValidationError()
-            if not is_parsing_complex:
-                temp.append(ch)
-            if ch == ']':
-                if len(exp_parts) == 0 or type(exp_parts[-1]) != Attribute:
-                    raise ValidationError()
-                attr = exp_parts[-1]
-                del temp[0]; del temp[-1]
-                new_exp_parts = self.parse(''.join(chr for chr in temp))
-                if len(new_exp_parts) == 0:
-                    raise ValidationError()
-                attr.index = Indexer(new_exp_parts)
-        elif self.is_group_operator(ch):
-            if ch == ')' and (len(temp) == 0 or temp[0] != '('):
-                raise ValidationError()
-            if ch == ')':
-                attr = None
-                if len(exp_parts) != 0 and type(exp_parts[-1]) == Attribute:
-                    attr = exp_parts[-1]
-                del temp[0]; del temp[-1]
-                new_exp_parts = self.parse(''.join(chr for chr in temp))
-                if attr:
-                    attr.callable_args = new_exp_parts
-                else:
-                    exp_parts.append(Group(new_exp_parts))
-        elif self.is_string_operator(ch):
-            if ch == '\'' and len(temp) != 0 and temp[0] != '\'':
-                raise ValidationError()
-            if ch == '\"' and len(temp) != 0 and temp[0] != '\"':
-                raise ValidationError()
-            if (temp[0] != '\'' and ch == '\'') or \
-               (temp[0] != '\"' and ch == '\"'):
-                exp_parts.append(Attribute(temp))
-
-        return exp_parts
-
-    def is_name(self, value):
-        return not value[0].isdigit()
-
-    def is_single_operator(self, ch):
-        return ch in ['=', '==', '===', '!=', '!==',
-                      '>', '>=', '<', '<=', '&', '&&',
-                      '|', '||', '^', '*', '**', '%',
-                      '!', '~', '+', '++', '-', '--',
-                      '+=', '-=', '|=', '&=', '/', '//']
-
-    def is_group_operator(self, ch):
-        return ch in ['(', ')']
-
-    def is_index_operator(self, ch):
-        return ch in ['[', ']']
-
-    def is_string_operator(self, ch):
-        return ch in ['\'', '\"']
-
-    def is_valid(self, tags):
-        return any(self.is_method(tag) or \
-                   self.is_value(tag) or \
-                   self.is_name(tag) or \
-                   self.is_single_operator(tag) or \
-                   self.is_pair_operator(tag)
-                   for tag in tags)
-        pass
+        self.exp_parts = exp_parts
 
     def __str__(self):
         result = ""

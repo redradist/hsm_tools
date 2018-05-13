@@ -1,5 +1,5 @@
+from hsm_types import Value, Attribute, Operator, Indexer, Group, String, Function
 from exceptions import ValidationError
-from hsm_types import Value, Attribute, Operation, Indexer, Group, String, Function
 
 
 class ExpressionParser:
@@ -20,7 +20,7 @@ class ExpressionParser:
     def is_operator_char(self, ch):
         return any(ch in operator for operator in ExpressionParser._operators)
 
-    def is_single_operator(self, ch):
+    def is_operator(self, ch):
         return ch in ['=', '==', '===', '!=', '!==',
                       '>', '>=', '<', '<=', '&', '&&',
                       '|', '||', '^', '*', '**', '%',
@@ -49,8 +49,9 @@ class ExpressionParser:
 
     def parse_string(self, ch):
         self.temp.append(ch)
-        if (self.temp[0] == '\'' and ch == '\'') or \
-           (self.temp[0] == '\"' and ch == '\"'):
+        if len(self.temp) > 1 and \
+           ((self.temp[0] == '\'' and ch == '\'') or \
+            (self.temp[0] == '\"' and ch == '\"')):
             del self.temp[0]
             del self.temp[-1]
             self._expression.append(String(''.join(self.temp)))
@@ -68,8 +69,8 @@ class ExpressionParser:
     def parse_operator(self, ch):
         if self.is_operator_char(ch):
             self.temp.append(ch)
-        elif self.is_single_operator(''.join(self.temp)):
-            self._expression.append(Operation(''.join(self.temp)))
+        elif self.is_operator(''.join(self.temp)):
+            self._expression.append(Operator(''.join(self.temp)))
             self.temp = []
             self._parse_expression(ch)
         else:
@@ -101,15 +102,20 @@ class ExpressionParser:
         if ch == ')':
             del self.temp[0]
             del self.temp[-1]
-            if len(self._expression) > 0 and type(self._expression[-1]) == Function:
-                func = self._expression[-1]
-                func.callable_args = Group(self.temp)
-            else:
-                self._expression.append(Group(self.temp))
+            self._expression.append(Group(self.temp))
             self.temp = []
 
     def parse_function_body(self, ch):
-        pass
+        self.temp.append(ch)
+        if ch == '}':
+            del self.temp[0]
+            del self.temp[-1]
+            if len(self._expression) > 0 and type(self._expression[-1]) == Function:
+                func = self._expression[-1]
+                func.body = ''.join(self.temp)
+            else:
+                raise ValidationError()
+            self.temp = []
 
     def parse_object(self, ch):
         pass
@@ -198,6 +204,11 @@ class ExpressionParser:
 
 
 if __name__ == '__main__':
+    example = 'k == isAction(arg0, arg1) { arg0 = arg1; }'
+    parser = ExpressionParser(example)
+    condition = parser.parse()
+    print(condition)
+
     example = 'k > 0 && isAction(arg0, arg1)'
     parser = ExpressionParser(example)
     condition = parser.parse()
@@ -207,21 +218,3 @@ if __name__ == '__main__':
     parser = ExpressionParser(example)
     condition = parser.parse()
     print(condition)
-    # example = 'k >= 0 || isAction() {}'
-    # condition = ExpressionParser(example)
-    # print(condition)
-    # example = 'k == 0 || () { }'
-    # condition = ExpressionParser(example)
-    # print(condition)
-    # example = 'k === 0 || isAction()'
-    # condition = ExpressionParser(example)
-    # print(condition)
-    # example = 'k === 0 || isAction(ad, gt)'
-    # condition = ExpressionParser(example)
-    # print(condition)
-    # example = 'k[1] === 0 || isAction(ad, gt)'
-    # condition = ExpressionParser(example)
-    # print(condition)
-    # example = 'k === 0 || isAction(ad, gt, gf)'
-    # condition = ExpressionParser(example)
-    # print(condition)
