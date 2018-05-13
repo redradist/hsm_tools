@@ -248,7 +248,23 @@ class TestingExpressionParser(unittest.TestCase):
         self.assertEqual(type(expression[2].attribute), Attribute)
         self.assertEqual(expression[2].attribute.name, 'l')
 
-    def test_Variable_AND_VariableComplexIndexer__Valid(self):
+    def test_Variable_AND_VariableComplex0Indexer__Valid(self):
+        example = 'k && l[getIndex()]'
+        parser = ExpressionParser(example)
+        expression = parser.parse()
+        self.assertEqual(len(expression), 3)
+        self.assertEqual(type(expression[0]), Attribute)
+        self.assertEqual(expression[0].name, 'k')
+        self.assertEqual(type(expression[1]), Operator)
+        self.assertEqual(expression[1].name, '&&')
+        self.assertEqual(type(expression[2]), Indexer)
+        self.assertEqual(type(expression[2].attribute), Attribute)
+        self.assertEqual(expression[2].attribute.name, 'l')
+        self.assertEqual(type(expression[2].expression), Function)
+        self.assertEqual(expression[2].expression.name, 'getIndex')
+        self.assertEqual(len(expression[2].expression.args), 0)
+
+    def test_Variable_AND_VariableComplex1Indexer__Valid(self):
         example = 'k && l[getIndex() { return 1; }]'
         parser = ExpressionParser(example)
         expression = parser.parse()
@@ -260,6 +276,9 @@ class TestingExpressionParser(unittest.TestCase):
         self.assertEqual(type(expression[2]), Indexer)
         self.assertEqual(type(expression[2].attribute), Attribute)
         self.assertEqual(expression[2].attribute.name, 'l')
+        self.assertEqual(type(expression[2].expression), Function)
+        self.assertEqual(expression[2].expression.name, 'getIndex')
+        self.assertEqual(len(expression[2].expression.args), 0)
 
     def test_Variable_AND_VariableIndexer__Invalid(self):
         example = 'k && l[{1}]'
@@ -474,6 +493,29 @@ class TestingExpressionParser(unittest.TestCase):
         self.assertEqual(expression[2].args[0][1].name, '==')
         self.assertEqual(type(expression[2].args[0][2]), Attribute)
         self.assertEqual(expression[2].args[0][2].name, 'arg0')
+        self.assertEqual(type(expression[2].args[1]), Attribute)
+        self.assertEqual(expression[2].args[1].name, 'arg1')
+
+    def test_Variable_EQUAL_NamespaceActionArgExpression2Arg1__Valid(self):
+        example = 'k == MyNameSpace::isAction(arg0 = k, arg1)'
+        parser = ExpressionParser(example)
+        expression = parser.parse()
+        self.assertEqual(len(expression), 3)
+        self.assertEqual(type(expression[0]), Attribute)
+        self.assertEqual(expression[0].name, 'k')
+        self.assertEqual(type(expression[1]), Operator)
+        self.assertEqual(expression[1].name, '==')
+        self.assertEqual(type(expression[2]), Function)
+        self.assertEqual(expression[2].name, 'MyNameSpace::isAction')
+        self.assertEqual(len(expression[2].args), 2)
+        self.assertEqual(type(expression[2].args[0]), Expression)
+        self.assertEqual(len(expression[2].args[0]), 3)
+        self.assertEqual(type(expression[2].args[0][0]), Attribute)
+        self.assertEqual(expression[2].args[0][0].name, 'arg0')
+        self.assertEqual(type(expression[2].args[0][1]), Operator)
+        self.assertEqual(expression[2].args[0][1].name, '=')
+        self.assertEqual(type(expression[2].args[0][2]), Attribute)
+        self.assertEqual(expression[2].args[0][2].name, 'k')
         self.assertEqual(type(expression[2].args[1]), Attribute)
         self.assertEqual(expression[2].args[1].name, 'arg1')
 
