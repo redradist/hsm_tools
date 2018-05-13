@@ -142,14 +142,34 @@ class Group:
 
 class Attribute:
     def __init__(self, name):
+        self.object = None
+        self.name = name
+
+
+class Object:
+    def __init__(self, name):
         self.name = name
 
 
 class Function:
     def __init__(self, name):
+        self.object = None
         self.name = name
         self.args = None
         self.body = None
+
+    def __str__(self):
+        result = ''
+        if self.object:
+            result += str(self.object) + '.'
+        result += str(self.name)
+        result += '('
+        arg_str = ''
+        for arg in self.args:
+            if len(arg_str) != 0:
+                arg_str += ' '
+            arg_str += str(arg)
+        result += ')'
 
 
 class String:

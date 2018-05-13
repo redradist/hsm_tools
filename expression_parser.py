@@ -1,4 +1,4 @@
-from hsm_types import Value, Attribute, Operator, Indexer, Group, String, Function
+from hsm_types import Value, Attribute, Operator, Indexer, Group, String, Function, Object
 from exceptions import ValidationError
 
 
@@ -42,8 +42,9 @@ class ExpressionParser:
     def parse_text(self, ch):
         if ch.isalnum():
             self.temp.append(ch)
-        else:
-            self._expression.append(Attribute(''.join(self.temp)))
+        elif len(self.temp) > 0:
+            attrib = self._expression[-1]
+            attrib.name = ''.join(self.temp)
             self.temp = []
             self._parse_expression(ch)
 
@@ -118,7 +119,16 @@ class ExpressionParser:
             self.temp = []
 
     def parse_object(self, ch):
-        pass
+        self.temp.append(ch)
+        if ch == '}':
+            del self.temp[0]
+            del self.temp[-1]
+            if len(self._expression) > 0 and type(self._expression[-1]) == Function:
+                func = self._expression[-1]
+                func.body = ''.join(self.temp)
+            else:
+                raise ValidationError()
+            self.temp = []
 
     def parse_comma(self, ch):
         # Do nothing for comma operator
@@ -144,17 +154,33 @@ class ExpressionParser:
             self._expression = []
         elif ch.isalpha():
             contexts.append('Text')
+            if len(self._expression) == 0 or \
+                type(self._expression[-1]) != Attribute or \
+                self._expression[-1].object == None or \
+                self._expression[-1].name != None:
+                self._expression.append(Attribute(None))
         elif ch.isdigit():
             contexts.append('Number')
         elif self.is_operator_char(ch):
             contexts.append('Operator')
         elif len(self._expression) > 0 and \
             type(self._expression[-1]) == Attribute and \
+            ch == '.':
+            contexts.append('Text')
+            old_attrib = self._expression[-1]
+            obj = Object(old_attrib.name)
+            attrib = Attribute(None)
+            attrib.object = obj
+            self._expression[-1] = attrib
+        elif len(self._expression) > 0 and \
+            type(self._expression[-1]) == Attribute and \
             self.is_group_operator(ch):
             contexts[-1] = 'Function'
             if len(self._expression) > 0 and type(self._expression[-1]) == Attribute:
                 attr = self._expression[-1]
-                self._expression[-1] = Function(attr.name)
+                func = Function(attr.name)
+                func.object = attr.object
+                self._expression[-1] = func
         elif self.is_function_body_operator(ch):
             contexts.append('FunctionBody')
         elif self.is_group_operator(ch):
@@ -204,6 +230,11 @@ class ExpressionParser:
 
 
 if __name__ == '__main__':
+    example = 'name.isAction(arg0, arg1) == k'
+    parser = ExpressionParser(example)
+    condition = parser.parse()
+    print(condition)
+
     example = 'k == isAction(arg0, arg1) { arg0 = arg1; }'
     parser = ExpressionParser(example)
     condition = parser.parse()
