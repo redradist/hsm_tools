@@ -14,7 +14,8 @@ class ExpressionParser:
                    '>', '>=', '<', '<=', '&', '&&',
                    '|', '||', '^', '*', '**', '%',
                    '!', '~', '+', '++', '-', '--',
-                   '+=', '-=', '|=', '&=', '/', '//' ]
+                   '+=', '-=', '|=', '&=', '/', '//',
+                   '->']
 
     def is_name(self, value):
         return not value[0].isdigit()
@@ -23,7 +24,7 @@ class ExpressionParser:
         return any(ch in operator for operator in ExpressionParser._operators)
 
     def is_operator(self, ch):
-        return ch in ['=', '==', '===', '!=', '!==',
+        return ch in ['->', '=', '==', '===', '!=', '!==',
                       '>', '>=', '<', '<=', '&', '&&',
                       '|', '||', '^', '*', '**', '%',
                       '!', '~', '+', '++', '-', '--',
@@ -80,9 +81,45 @@ class ExpressionParser:
         if self.is_operator_char(ch):
             self.temp.append(ch)
         elif self.is_operator(''.join(self.temp)):
-            self._expressions.append(Operator(''.join(self.temp)))
-            self.temp = []
-            self._parse_expression(ch)
+            if self.temp[0] == '-' and self.temp[1] == '>':
+                if len(self._expressions) > 0 and type(self._expressions[-1]) == Function:
+                    if self.is_name_letter(ch) or ch == ' ':
+                        if not hasattr(self, 'return_value'):
+                            self.return_value = ''
+                        self.return_value += ch
+                    else:
+                        func = self._expressions[-1]
+                        return_value = self.return_value.strip()
+                        if ' ' in return_value:
+                            raise ValidationError()
+                        if len(return_value) != 0:
+                            func.return_value = return_value
+                        self.temp = []
+                        self._parse_expression(ch)
+                elif len(self._expressions) > 0 and type(self._expressions[-1]) == Group:
+                    if self.is_name_letter(ch) or ch == ' ':
+                        if not hasattr(self, 'return_value'):
+                            self.return_value = ''
+                        self.return_value += ch
+                    else:
+                        args = self._expressions[-1]
+                        anon_func = Function(None)
+                        anon_func.args = args
+                        anon_func.body = ''.join(self.temp)
+                        return_value = self.return_value.strip()
+                        if ' ' in return_value:
+                            raise ValidationError()
+                        if len(return_value) != 0:
+                            anon_func.return_value = return_value
+                        self._expressions[-1] = anon_func
+                        self.temp = []
+                        self._parse_expression(ch)
+                else:
+                    raise ValidationError()
+            else:
+                self._expressions.append(Operator(''.join(self.temp)))
+                self.temp = []
+                self._parse_expression(ch)
         else:
             raise ValidationError()
 
@@ -285,32 +322,37 @@ class ExpressionParser:
 
 
 if __name__ == '__main__':
-    example = 'MyNameSpace::isAction(arg0 == 1, arg1) == k'
+    example = 'k == isAction(arg0, arg1) -> bool { arg0 = arg1; return arg0; }'
     parser = ExpressionParser(example)
     condition = parser.parse()
     print(condition)
 
-    example = 'MyNameSpace::isAction(arg0, arg1) == k'
-    parser = ExpressionParser(example)
-    condition = parser.parse()
-    print(condition)
-
-    example = 'name.isAction(arg0, arg1) == k'
-    parser = ExpressionParser(example)
-    condition = parser.parse()
-    print(condition)
-
-    example = 'k == isAction(arg0, arg1) { arg0 = arg1; }'
-    parser = ExpressionParser(example)
-    condition = parser.parse()
-    print(condition)
-
-    example = 'k > 0 && isAction(arg0, arg1)'
-    parser = ExpressionParser(example)
-    condition = parser.parse()
-    print(condition)
-
-    example = 'k[1] > 0 || isAction()'
-    parser = ExpressionParser(example)
-    condition = parser.parse()
-    print(condition)
+    # example = 'MyNameSpace::isAction(arg0 == 1, arg1) == k'
+    # parser = ExpressionParser(example)
+    # condition = parser.parse()
+    # print(condition)
+    #
+    # example = 'MyNameSpace::isAction(arg0, arg1) == k'
+    # parser = ExpressionParser(example)
+    # condition = parser.parse()
+    # print(condition)
+    #
+    # example = 'name.isAction(arg0, arg1) == k'
+    # parser = ExpressionParser(example)
+    # condition = parser.parse()
+    # print(condition)
+    #
+    # example = 'k == isAction(arg0, arg1) { arg0 = arg1; }'
+    # parser = ExpressionParser(example)
+    # condition = parser.parse()
+    # print(condition)
+    #
+    # example = 'k > 0 && isAction(arg0, arg1)'
+    # parser = ExpressionParser(example)
+    # condition = parser.parse()
+    # print(condition)
+    #
+    # example = 'k[1] > 0 || isAction()'
+    # parser = ExpressionParser(example)
+    # condition = parser.parse()
+    # print(condition)

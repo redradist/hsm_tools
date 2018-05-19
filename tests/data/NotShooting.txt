@@ -17,7 +17,7 @@ state "Not Shooting State" as NotShooting {
       state "Configuring mode" as Configuring
       [*] --> Idle
       Idle --> Configuring : NotShooting.EvConfig
-      Configuring --> Idle : EvConfig
+      Configuring --> Idle : EvConfig / isAction(arg0, arg1) \n { arg0 = arg1; } [ arg0 == arg1 ]
   }
 
   [*] --> NotShooting.Idle

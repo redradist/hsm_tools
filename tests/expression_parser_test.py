@@ -556,6 +556,43 @@ class TestingExpressionParser(unittest.TestCase):
         self.assertEqual(expression[2].args[1].name, 'arg1')
         self.assertEqual(expression[2].body, ' arg0 = arg1; ')
 
+    def test_Variable_EQUAL_AnonymousActionArg0Arg1Body__ReturnAuto__Valid(self):
+        example = 'k == (arg0, arg1) -> { arg0 = arg1; }'
+        parser = ExpressionParser(example)
+        expression = parser.parse()
+        self.assertEqual(len(expression), 3)
+        self.assertEqual(type(expression[0]), Attribute)
+        self.assertEqual(expression[0].name, 'k')
+        self.assertEqual(type(expression[1]), Operator)
+        self.assertEqual(expression[1].name, '==')
+        self.assertEqual(type(expression[2]), Function)
+        self.assertEqual(expression[2].name, None)
+        self.assertEqual(len(expression[2].args), 2)
+        self.assertEqual(type(expression[2].args[0]), Attribute)
+        self.assertEqual(expression[2].args[0].name, 'arg0')
+        self.assertEqual(type(expression[2].args[1]), Attribute)
+        self.assertEqual(expression[2].args[1].name, 'arg1')
+        self.assertEqual(expression[2].body, ' arg0 = arg1; ')
+
+    def test_Variable_EQUAL_AnonymousActionArg0Arg1Body__ReturnBool__Valid(self):
+        example = 'k == (arg0, arg1) -> bool { arg0 = arg1; }'
+        parser = ExpressionParser(example)
+        expression = parser.parse()
+        self.assertEqual(len(expression), 3)
+        self.assertEqual(type(expression[0]), Attribute)
+        self.assertEqual(expression[0].name, 'k')
+        self.assertEqual(type(expression[1]), Operator)
+        self.assertEqual(expression[1].name, '==')
+        self.assertEqual(type(expression[2]), Function)
+        self.assertEqual(expression[2].name, None)
+        self.assertEqual(len(expression[2].args), 2)
+        self.assertEqual(type(expression[2].args[0]), Attribute)
+        self.assertEqual(expression[2].args[0].name, 'arg0')
+        self.assertEqual(type(expression[2].args[1]), Attribute)
+        self.assertEqual(expression[2].args[1].name, 'arg1')
+        self.assertEqual(expression[2].return_value, 'bool')
+        self.assertEqual(expression[2].body, ' arg0 = arg1; ')
+
     def test_Variable_EQUAL_ActionArg0Arg1Body_DoubleBraces__Valid(self):
         example = 'k == isAction(arg0, arg1) { { arg0 = arg1; } }'
         parser = ExpressionParser(example)
@@ -573,6 +610,43 @@ class TestingExpressionParser(unittest.TestCase):
         self.assertEqual(type(expression[2].args[1]), Attribute)
         self.assertEqual(expression[2].args[1].name, 'arg1')
         self.assertEqual(expression[2].body, ' { arg0 = arg1; } ')
+
+    def test_Variable_EQUAL_ActionArg0Arg1Body__ReturnAuto__Valid(self):
+        example = 'k == isAction(arg0, arg1) -> { arg0 = arg1; return arg0; }'
+        parser = ExpressionParser(example)
+        expression = parser.parse()
+        self.assertEqual(len(expression), 3)
+        self.assertEqual(type(expression[0]), Attribute)
+        self.assertEqual(expression[0].name, 'k')
+        self.assertEqual(type(expression[1]), Operator)
+        self.assertEqual(expression[1].name, '==')
+        self.assertEqual(type(expression[2]), Function)
+        self.assertEqual(expression[2].name, 'isAction')
+        self.assertEqual(len(expression[2].args), 2)
+        self.assertEqual(type(expression[2].args[0]), Attribute)
+        self.assertEqual(expression[2].args[0].name, 'arg0')
+        self.assertEqual(type(expression[2].args[1]), Attribute)
+        self.assertEqual(expression[2].args[1].name, 'arg1')
+        self.assertEqual(expression[2].body, ' arg0 = arg1; return arg0; ')
+
+    def test_Variable_EQUAL_ActionArg0Arg1Body_ReturnValue__Valid(self):
+        example = 'k == isAction(arg0, arg1) -> bool { arg0 = arg1; return arg0; }'
+        parser = ExpressionParser(example)
+        expression = parser.parse()
+        self.assertEqual(len(expression), 3)
+        self.assertEqual(type(expression[0]), Attribute)
+        self.assertEqual(expression[0].name, 'k')
+        self.assertEqual(type(expression[1]), Operator)
+        self.assertEqual(expression[1].name, '==')
+        self.assertEqual(type(expression[2]), Function)
+        self.assertEqual(expression[2].name, 'isAction')
+        self.assertEqual(len(expression[2].args), 2)
+        self.assertEqual(type(expression[2].args[0]), Attribute)
+        self.assertEqual(expression[2].args[0].name, 'arg0')
+        self.assertEqual(type(expression[2].args[1]), Attribute)
+        self.assertEqual(expression[2].args[1].name, 'arg1')
+        self.assertEqual(expression[2].return_value, 'bool')
+        self.assertEqual(expression[2].body, ' arg0 = arg1; return arg0; ')
 
     def test_Variable_EQUAL_ActionArgExpressionArg1__Valid(self):
         example = 'k == isAction(arg0 == arg2, arg1)'
