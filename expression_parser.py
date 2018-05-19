@@ -313,7 +313,9 @@ class ExpressionParser:
         self.num_of_open_braces = 0
         self.num_of_open_perentesis = 0
         self.num_of_open_square_bracket = 0
+        self.num_char = 0
         for ch in self._statement:
+            self.num_char += 1
             self._parse_expression(ch)
 
         # NOTE(redrad): Currently workaround to finish parsing statement

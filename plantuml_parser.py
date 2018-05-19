@@ -26,9 +26,11 @@ _transition_regex = r"(?P<state_from>" + _state_name_regex + r")\s*?" + \
 _transition = re.compile(_transition_regex)
 _event_regex = r"(?P<event>[\.\w]+)"
 _action_regex = r"(?P<action_name>[\.\w]+)\s*\(\s*(?P<action_args>.*)\s*\)"
+_action = re.compile(_action_regex)
+_actions_regex = r"(?P<actions>(" + _action_regex + r")+)"
 _condition_regex = r"\[\s*(?P<condition>.*)\s*\]"
 _transition_meta_info_regex = _event_regex + r"\s*\/?\s*" + \
-                               r"(" + _action_regex + r")?\s*" + \
+                               r"(" + _actions_regex + r")?\s*" + \
                                r"(" + _condition_regex + r")?"
 _transition_meta_info = re.compile(_transition_meta_info_regex)
 
@@ -56,7 +58,7 @@ class PlantUMLParser:
             to_state_name = transition.group('state_to')
             comment = transition.group('comment')
             event = None
-            action = None
+            actions = []
             condition = None
             if comment is not None:
                 transition_meta_info = _transition_meta_info.match(comment)
@@ -78,21 +80,29 @@ class PlantUMLParser:
                                     raise ValidationError()
                         event = Event(event_name, owner_state)
                     owner_state = None
-                    full_action_name = transition_meta_info.group('action_name')
-                    if full_action_name is not None:
-                        index = str.rfind(full_action_name, '.')
-                        action_name = full_action_name[index+1:]
-                        if index != -1:
-                            full_state_name = full_action_name[:index]
-                            if full_state_name == '':
-                                owner_state = parent_state
-                            else:
-                                state = State.states[full_state_name]
-                                if parent_state == state or parent_state.is_child_of(state):
-                                    owner_state = state
-                                else:
-                                    raise ValidationError()
-                        action = Action(action_name, owner=owner_state)
+                    all_actions = transition_meta_info.group('actions')
+                    if all_actions:
+                        all_actions = all_actions.split(',')
+                        for action in all_actions:
+                            action = action.strip()
+                            action_info = _action.match(action)
+                            if action_info:
+                                print("actions_info =", action_info)
+                                full_action_name = action_info.group('action_name')
+                                if full_action_name is not None:
+                                    index = str.rfind(full_action_name, '.')
+                                    action_name = full_action_name[index+1:]
+                                    if index != -1:
+                                        full_state_name = full_action_name[:index]
+                                        if full_state_name == '':
+                                            owner_state = parent_state
+                                        else:
+                                            state = State.states[full_state_name]
+                                            if parent_state == state or parent_state.is_child_of(state):
+                                                owner_state = state
+                                            else:
+                                                raise ValidationError()
+                                    actions.append(Action(action_name, owner=owner_state))
                     full_condition = transition_meta_info.group('condition')
                     if full_condition is not None:
                         condition = Condition(full_condition, owner_state)
@@ -108,7 +118,7 @@ class PlantUMLParser:
                 states.add(to_state)
             else:
                 states.add(to_state)
-            transitions.add(Transition(from_state, to_state, event, action, condition))
+            transitions.add(Transition(from_state, to_state, event, actions, condition))
         return states, transitions
 
     def parse_condition(self):
