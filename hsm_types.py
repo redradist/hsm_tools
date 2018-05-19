@@ -168,12 +168,14 @@ class Attribute:
         result += str(self.name)
         return result
 
+
 class Object:
     def __init__(self, name):
         self.name = name
 
     def __str__(self):
         return str(self.name)
+
 
 class Function:
     def __init__(self, name):
@@ -223,12 +225,14 @@ class Operator:
     def __str__(self):
         return str(self.name)
 
+
 class Value:
     def __init__(self, value):
         self.value = value
 
     def __str__(self):
         return str(self.name)
+
 
 class Condition:
     def __init__(self, statement, exp_parts, owner=None):
