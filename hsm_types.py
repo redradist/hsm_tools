@@ -70,8 +70,8 @@ class State:
 
     def __str__(self):
         result = ""
-        if self.parent_state is not None:
-            result += str(self.parent_state) + '.'
+        # if self.parent_state is not None:
+        #     result += str(self.parent_state) + '.'
         result += self.name
         return result
 
@@ -111,39 +111,6 @@ class Transition:
         return hash(self.from_state) ^ hash(self.to_state)
 
 
-class Event:
-    """
-    Object that responsible for storing event information:
-        State owner
-    """
-    def __init__(self, name, owner=None):
-        self.name = name
-        self.owner = owner
-
-    def __str__(self):
-        result = ""
-        if self.owner is not None:
-            result += str(self.owner) + '.'
-        result += self.name
-        return result
-
-
-class Action:
-    def __init__(self, name, *args, owner=None):
-        self.name = name
-        self.args = args
-        self.body = None
-        self.owner = owner
-
-    def __str__(self):
-        result = ""
-        if self.owner is not None:
-            result += str(self.owner) + '.'
-        result += self.name
-        result += '(' + ', '.join(str(arg) for arg in self.args) + ')'
-        return result
-
-
 class Group(Expression):
     def __init__(self, expression):
         if type(expression) == Expression:
@@ -157,16 +124,39 @@ class Group(Expression):
 
 
 class Attribute:
-    def __init__(self, name):
-        self.object = None
+    def __init__(self, name, object=None, *args):
+        self.object = object
         self.name = name
+        self.args = args
 
     def __str__(self):
         result = ''
         if self.object:
             result += str(self.object) + '.'
         result += str(self.name)
+        result += '{'
+        if self.args:
+            arg_str = ''
+            for arg in self.args:
+                if len(arg_str) != 0:
+                    arg_str += ', '
+                arg_str += str(arg)
+            result += arg_str
+        result += '}'
         return result
+
+
+class Event(Attribute):
+    """
+    Object that responsible for storing event information:
+        State owner
+    """
+    def __init__(self, attribute):
+        if not isinstance(attribute, Attribute):
+            raise TypeError('attribute is not Attribute type')
+        super().__init__(attribute.name,
+                         attribute.object,
+                         *attribute.args)
 
 
 class Object:
@@ -178,12 +168,12 @@ class Object:
 
 
 class Function:
-    def __init__(self, name):
-        self.object = None
+    def __init__(self, name, object=None, *args, body=None, return_value=None):
+        self.object = object
         self.name = name
-        self.args = None
-        self.return_value = None
-        self.body = None
+        self.args = args
+        self.return_value = return_value
+        self.body = body
 
     def __str__(self):
         result = ''
@@ -205,12 +195,28 @@ class Function:
         return result
 
 
+class Action(Function):
+    """
+    Object that responsible for storing event information:
+        State owner
+    """
+    def __init__(self, function):
+        if not isinstance(function, Function):
+            raise TypeError('function is not Function type')
+        super().__init__(function.name,
+                         function.object,
+                         *function.args,
+                         body=function.body,
+                         return_value=function.return_value)
+
+
 class String:
     def __init__(self, name):
         self.name = name
 
     def __str__(self):
         return str(self.name)
+
 
 class Indexer:
     def __init__(self, attribute):
@@ -231,7 +237,7 @@ class Value:
         self.value = value
 
     def __str__(self):
-        return str(self.name)
+        return str(self.value)
 
 
 class Condition:
