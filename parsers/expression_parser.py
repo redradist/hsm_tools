@@ -1,5 +1,3 @@
-import operator
-
 from hsm_types import Value, Attribute, Operator, Indexer, Group, String, Function, Object, Expression
 from exceptions import ValidationError
 
@@ -329,32 +327,32 @@ if __name__ == '__main__':
     condition = parser.parse()
     print(condition)
 
-    # example = 'MyNameSpace::isAction(arg0 == 1, arg1) == k'
-    # parser = ExpressionParser(example)
-    # condition = parser.parse()
-    # print(condition)
-    #
-    # example = 'MyNameSpace::isAction(arg0, arg1) == k'
-    # parser = ExpressionParser(example)
-    # condition = parser.parse()
-    # print(condition)
-    #
-    # example = 'name.isAction(arg0, arg1) == k'
-    # parser = ExpressionParser(example)
-    # condition = parser.parse()
-    # print(condition)
-    #
-    # example = 'k == isAction(arg0, arg1) { arg0 = arg1; }'
-    # parser = ExpressionParser(example)
-    # condition = parser.parse()
-    # print(condition)
-    #
-    # example = 'k > 0 && isAction(arg0, arg1)'
-    # parser = ExpressionParser(example)
-    # condition = parser.parse()
-    # print(condition)
-    #
-    # example = 'k[1] > 0 || isAction()'
-    # parser = ExpressionParser(example)
-    # condition = parser.parse()
-    # print(condition)
+    example = 'MyNameSpace::isAction(arg0 == 1, arg1) == k'
+    parser = ExpressionParser(example)
+    condition = parser.parse()
+    print(condition)
+
+    example = 'MyNameSpace::isAction(arg0, arg1) == k'
+    parser = ExpressionParser(example)
+    condition = parser.parse()
+    print(condition)
+
+    example = 'name.isAction(arg0, arg1) == k'
+    parser = ExpressionParser(example)
+    condition = parser.parse()
+    print(condition)
+
+    example = 'k == isAction(arg0, arg1) { arg0 = arg1; }'
+    parser = ExpressionParser(example)
+    condition = parser.parse()
+    print(condition)
+
+    example = 'k > 0 && isAction(arg0, arg1)'
+    parser = ExpressionParser(example)
+    condition = parser.parse()
+    print(condition)
+
+    example = 'k[1] > 0 || isAction()'
+    parser = ExpressionParser(example)
+    condition = parser.parse()
+    print(condition)

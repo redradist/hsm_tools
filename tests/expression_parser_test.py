@@ -1,7 +1,7 @@
 import unittest
 
 from hsm_types import Operator, Attribute, Indexer, Value, Function, String, Object, Expression, Group
-from expression_parser import ExpressionParser
+from parsers.expression_parser import ExpressionParser
 from exceptions import ValidationError
 
 
