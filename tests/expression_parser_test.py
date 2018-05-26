@@ -14,6 +14,24 @@ class TestingExpressionParser(unittest.TestCase):
         """Currently nothing to do. Use it for reinitialization data after test"""
         pass
 
+    def test__ActionArgValue__Valid(self):
+        example = "Action2(2)"
+        parser = ExpressionParser(example)
+        expression = parser.parse()
+        self.assertEqual(type(expression), Function)
+        self.assertEqual(len(expression.args), 1)
+        self.assertEqual(type(expression.args[0]), Value)
+        self.assertEqual(expression.args[0].value, '2')
+
+    def test__ActionArgAttribute__Valid(self):
+        example = "Action2(k)"
+        parser = ExpressionParser(example)
+        expression = parser.parse()
+        self.assertEqual(type(expression), Function)
+        self.assertEqual(len(expression.args), 1)
+        self.assertEqual(type(expression.args[0]), Attribute)
+        self.assertEqual(expression.args[0].name, 'k')
+
     def test__Group_of_OperatorVariable_AND_Variable__Valid(self):
         example = "(++k && l)"
         parser = ExpressionParser(example)
@@ -99,6 +117,40 @@ class TestingExpressionParser(unittest.TestCase):
         self.assertEqual(expression[2].name, '++')
         self.assertEqual(type(expression[3]), Attribute)
         self.assertEqual(expression[3].name, 'l')
+
+    def test__VariableInitializer_AND_OperatorVariable__Valid(self):
+        example = "k{1} && ++l"
+        parser = ExpressionParser(example)
+        expression = parser.parse()
+        self.assertEqual(len(expression), 4)
+        self.assertEqual(type(expression[0]), Attribute)
+        self.assertEqual(expression[0].name, 'k')
+        self.assertEqual(len(expression[0].args), 1)
+        self.assertEqual(type(expression[0].args[0]), Value)
+        self.assertEqual(expression[0].args[0].value, '1')
+        self.assertEqual(type(expression[1]), Operator)
+        self.assertEqual(expression[1].name, '&&')
+        self.assertEqual(type(expression[2]), Operator)
+        self.assertEqual(expression[2].name, '++')
+        self.assertEqual(type(expression[3]), Attribute)
+        self.assertEqual(expression[3].name, 'l')
+
+    def test__OperatorVariable_AND_VariableInitializer__Valid(self):
+        example = "++k && l{1}"
+        parser = ExpressionParser(example)
+        expression = parser.parse()
+        self.assertEqual(len(expression), 4)
+        self.assertEqual(type(expression[0]), Operator)
+        self.assertEqual(expression[0].name, '++')
+        self.assertEqual(type(expression[1]), Attribute)
+        self.assertEqual(expression[1].name, 'k')
+        self.assertEqual(type(expression[2]), Operator)
+        self.assertEqual(expression[2].name, '&&')
+        self.assertEqual(type(expression[3]), Attribute)
+        self.assertEqual(expression[3].name, 'l')
+        self.assertEqual(len(expression[3].args), 1)
+        self.assertEqual(type(expression[3].args[0]), Value)
+        self.assertEqual(expression[3].args[0].value, '1')
 
     def test__Variable_AND_VariableOperator__Valid(self):
         example = "k && l++"

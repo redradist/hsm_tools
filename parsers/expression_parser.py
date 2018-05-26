@@ -143,7 +143,8 @@ class ExpressionParser:
             del self.temp[0]
             del self.temp[-1]
             parser = ExpressionParser(''.join(self.temp))
-            self._expressions[-1].args = list(parser.parse())
+            args = parser.parse()
+            self._expressions[-1].args = list(args) if isinstance(args, Expression) else [args]
             self.temp = []
 
     def parse_group(self, ch):
@@ -178,6 +179,11 @@ class ExpressionParser:
                     anon_func.args = args
                     anon_func.body = ''.join(self.temp)
                     self._expressions[-1] = anon_func
+                elif len(self._expressions) > 0 and type(self._expressions[-1]) == Attribute:
+                    attrib = self._expressions[-1]
+                    parser = ExpressionParser(''.join(self.temp))
+                    args = parser.parse()
+                    attrib.args = list(args) if isinstance(args, Expression) else [args]
                 else:
                     raise ValidationError()
                 self.temp = []
