@@ -49,7 +49,21 @@ _parameter_regex = _comment_regex + \
 
 class PlantUMLParser:
 
-    def parse_transition(self, instructions, parent_state=None):
+    def _parse_events(self, events):
+        parser = ExpressionParser(events)
+        expression = parser.parse()
+        return [Event(exp) for exp in expression] if isinstance(expression, Expression) else [Event(expression)]
+
+    def _parse_actions(self, actions):
+        parser = ExpressionParser(actions)
+        expression = parser.parse()
+        return [Action(exp) for exp in expression] if isinstance(expression, Expression) else [Action(expression)]
+
+    def _parse_condition(self, condition):
+        parser = ExpressionParser(condition)
+        return parser.parse()
+
+    def _parse_transition(self, instructions, parent_state=None):
         """
 
         :param instructions:
@@ -72,13 +86,19 @@ class PlantUMLParser:
                 events = self._parse_events(raw_events)
                 actions = self._parse_actions(raw_actions)
                 condition = self._parse_condition(raw_condition)
-            from_state = State(from_state_name, parent_state)
+            if from_state_name != '[*]':
+                from_state = State(from_state_name, parent_state)
+            else:
+                from_state = parent_state
             if from_state in states:
                 states.remove(from_state)
                 states.add(from_state)
             else:
                 states.add(from_state)
-            to_state = State(to_state_name, parent_state)
+            if to_state_name != '[*]':
+                to_state = State(to_state_name, parent_state)
+            else:
+                to_state = parent_state
             if to_state in states:
                 states.remove(to_state)
                 states.add(to_state)
@@ -87,21 +107,7 @@ class PlantUMLParser:
             transitions.add(Transition(from_state, to_state, events, actions, condition))
         return states, transitions
 
-    def _parse_events(self, events):
-        parser = ExpressionParser(events)
-        expression = parser.parse()
-        return [Event(exp) for exp in expression] if isinstance(expression, Expression) else [Event(expression)]
-
-    def _parse_actions(self, actions):
-        parser = ExpressionParser(actions)
-        expression = parser.parse()
-        return [Action(exp) for exp in expression] if isinstance(expression, Expression) else [Action(expression)]
-
-    def _parse_condition(self, condition):
-        parser = ExpressionParser(condition)
-        return parser.parse()
-
-    def parse_instructions(self, instructions, parent_state=None):
+    def _parse_instructions(self, instructions, parent_state=None):
         """
         Parsing the platuml
         :param instructions:
@@ -111,7 +117,7 @@ class PlantUMLParser:
         states = set()
         transitions = set()
         simple_instructions = re.sub(_nested_state_regex, '', copy.copy(instructions))
-        new_states, new_transitions = self.parse_transition(simple_instructions, parent_state)
+        new_states, new_transitions = self._parse_transition(simple_instructions, parent_state)
         states.update(new_states)
         transitions.update(new_transitions)
         nested_state_meta = _nested_state.finditer(instructions)
@@ -125,11 +131,10 @@ class PlantUMLParser:
             else:
                 states.add(new_state)
             body = nested_state.group('body')
-            new_states, new_transitions = self.parse_instructions(body, new_state)
+            new_states, new_transitions = self._parse_instructions(body, new_state)
             states.update(new_states)
             transitions.update(new_transitions)
         return states, transitions
-
 
     def parse_uml_file(self, file_name):
         """
@@ -138,13 +143,16 @@ class PlantUMLParser:
         :return: states, transitions: State and Transitions of State Machine
         """
         with open(file_name, 'r') as file:
+            import os
             instructions = file.read()
-            return self.parse_instructions(instructions)
+            state_machine_name = os.path.basename(file_name)
+            state_machine_name = state_machine_name.split('.')[0]
+            return self._parse_instructions(instructions, State(state_machine_name))
 
 
 if __name__ == '__main__':
     parser = PlantUMLParser()
-    states, transitions = parser.parse_uml_file('./tests/data/TestFSM.txt')
+    states, transitions = parser.parse_uml_file('./tests/data/SimpleFSM.txt')
     for state in states:
         print("=================")
         print("State name is " + state.name)
@@ -157,9 +165,14 @@ if __name__ == '__main__':
     for transition in transitions:
         print("Transition from: " + str(transition.from_state))
         print("Transition to: " + str(transition.to_state))
-        print("Transition event: " + str(transition.event))
-        print("Transition action: " + str(transition.action))
+        print("Transition events:" + str(transition.event))
+        for ev in transition.event:
+            print("  Event: " + str(ev))
+        print("Transition actions: " + str(transition.action))
+        for ac in transition.action:
+            print("  Action: " + str(ac))
         print("Transition condition: " + str(transition.condition))
 
+    # TODO(redra): Shoud be considered if needed to generate *.png
     # from subprocess import call
     # call(['java', '-jar', './plantuml.jar'])

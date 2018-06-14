@@ -1,0 +1,15 @@
+@startuml
+
+!include NotShooting.txt
+
+[*] --> PCM_FSM
+PCM_FSM --> [*]
+
+state "Not Shooting State 2" as PCM_FSM {
+  state "Idle mode" as Inactive
+  state "Configuring mode" as Active
+  [*] --> Inactive
+  Inactive --> Active : powerOn{} / Action() {}, Action2() [ i > k ]
+}
+
+@enduml

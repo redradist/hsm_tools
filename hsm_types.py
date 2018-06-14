@@ -48,6 +48,7 @@ class State:
     states = dict()
 
     def __init__(self, name, parent_state=None, comment=None):
+        self.sub_states = set()
         if parent_state is not None and name == '[*]':
             self.name = parent_state.name
             self.parent_state = parent_state.parent_state
@@ -57,6 +58,8 @@ class State:
             self.parent_state = parent_state
             self.comment = comment
             State.states[str(self)] = self
+        if parent_state is not None:
+            parent_state.sub_states.add(self)
 
     def is_child_of(self, state):
         parent_state = self.parent_state
