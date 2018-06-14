@@ -2,9 +2,34 @@ import argparse
 import datetime
 import itertools
 import re
+import traceback
+from sys import exc_info
 
 from jinja2 import Template
 from plantuml_parser import PlantUMLParser
+
+
+def generate_wrapper(state, templates, dir_to_save):
+    current_datetime = datetime.datetime.now()
+    current_date = current_datetime.strftime("%d %b %Y")
+
+    for template_file_name in templates:
+        if template_file_name:
+            with open(template_file_name, 'r') as file:
+                lines = file.readlines()
+                lines = "".join(lines)
+
+                template = Template(lines)
+                files_output = template.render(state=state,
+                                               date=current_date)
+                wrapper_name = state.name
+                __comment_regex = r"\w+\.(?P<file_extension>\w+)\.\w+"
+                __comment = re.compile(__comment_regex)
+                file_extension = __comment.search(template_file_name).group(1)
+                with open(dir_to_save + wrapper_name + "State." + file_extension, mode='w') as file_to_save:
+                    file_to_save.write(files_output)
+    for sub_state in state.sub_states:
+        generate_wrapper(sub_state, templates, dir_to_save)
 
 
 def generate_fsm_wrappers(uml_diagram, dir_to_save, templates=[]):
@@ -24,24 +49,8 @@ def generate_fsm_wrappers(uml_diagram, dir_to_save, templates=[]):
     if len(transitions) == 0:
         raise ValueError("Size of transitions is zero. No work to do man !?")
 
-    current_datetime = datetime.datetime.now()
-    current_date = current_datetime.strftime("%d %b %Y")
-
-    for template_file_name in templates:
-        if template_file_name:
-            with open(template_file_name, 'r') as file:
-                lines = file.readlines()
-                lines = "".join(lines)
-                for state, transition in itertools.zip_longest(states, transitions):
-                    template = Template(lines)
-                    files_output = template.render(state=state,
-                                                   date=current_date)
-                    wrapper_name = state.name
-                    __comment_regex = r"\w+\.(?P<file_extension>\w+)\.\w+"
-                    __comment = re.compile(__comment_regex)
-                    file_extension = __comment.search(template_file_name).group(1)
-                    with open(dir_to_save + wrapper_name + "State." + file_extension, mode='w') as file_to_save:
-                        file_to_save.write(files_output)
+    for state in states:
+        generate_wrapper(state, templates, dir_to_save)
 
 
 if __name__ == '__main__':
@@ -69,3 +78,4 @@ if __name__ == '__main__':
         generate_fsm_wrappers(args.uml_diagram, args.dir_to_save, args.templates)
     except Exception as ex:
         print("ex is " + str(ex))
+        traceback.print_exc()

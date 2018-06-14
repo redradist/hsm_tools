@@ -49,6 +49,7 @@ class State:
 
     def __init__(self, name, parent_state=None, comment=None):
         self.sub_states = set()
+        self.transitions = set()
         if parent_state is not None and name == '[*]':
             self.name = parent_state.name
             self.parent_state = parent_state.parent_state
@@ -60,6 +61,34 @@ class State:
             State.states[str(self)] = self
         if parent_state is not None:
             parent_state.sub_states.add(self)
+
+    def _get_sorted_transitions(self, transitions, predicate):
+        event_condition_transitions = []
+        event_transitions = []
+        simple_transitions = []
+        for transition in transitions:
+            if predicate(transition):
+                if transition.event is not None:
+                    if transition.condition is not None:
+                        event_condition_transitions.append(transition)
+                    else:
+                        event_transitions.append(transition)
+                else:
+                    simple_transitions.append(transition)
+        return event_condition_transitions + event_transitions + simple_transitions
+
+    def initial_transitions(self):
+        return self._get_sorted_transitions(self.transitions, lambda t: t.from_state == self)
+
+    def final_transitions(self):
+        return self._get_sorted_transitions(self.transitions, lambda t: t.to_state == self)
+
+    def internal_transitions(self):
+        external_transitions = set()
+        external_transitions.update(self.initial_transitions())
+        external_transitions.update(self.final_transitions())
+        internal_transitions = self.transitions.difference(external_transitions)
+        return self._get_sorted_transitions(internal_transitions, lambda t: True)
 
     def is_child_of(self, state):
         parent_state = self.parent_state
@@ -105,13 +134,20 @@ class Transition:
     def __eq__(self, other):
         return other is not None and \
                self.from_state == other.from_state and \
-               self.to_state == other.to_state
+               self.to_state == other.to_state and \
+               self.event == other.event and \
+               self.action == other.action and \
+               self.condition == other.condition
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
     def __hash__(self):
-        return hash(self.from_state) ^ hash(self.to_state)
+        return hash(self.from_state) ^ \
+               hash(self.to_state) ^ \
+               hash(not self.event or tuple(self.event)) ^ \
+               hash(not self.action or tuple(self.action)) ^ \
+               hash(not self.condition or tuple(self.condition))
 
 
 class Group(Expression):

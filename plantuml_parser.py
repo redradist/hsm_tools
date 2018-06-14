@@ -47,6 +47,27 @@ _parameter_regex = _comment_regex + \
                     r"\s*((" + _type_regex + r")\s+(?P<name>\w+)\s*)\s*"
 
 
+def _find_least_common_acesentor(root, states=[]):
+    if root is None:
+        return None
+
+    if root in states:
+        return root
+
+    least_common_acesentors = set()
+    for sub_state in root.sub_states:
+        acesentor = _find_least_common_acesentor(sub_state, states)
+        least_common_acesentors.add(acesentor)
+
+    if len(least_common_acesentors) > 0 and root.sub_states == least_common_acesentors:
+        if len(least_common_acesentors) == 1:
+            return least_common_acesentors.pop()
+        else:
+            return root
+    else:
+        return None
+
+
 class PlantUMLParser:
 
     def _parse_events(self, events):
@@ -88,22 +109,26 @@ class PlantUMLParser:
                 condition = self._parse_condition(raw_condition)
             if from_state_name != '[*]':
                 from_state = State(from_state_name, parent_state)
+                for state in states:
+                    if from_state == state:
+                        state.sub_states.update(from_state.sub_states)
+                        state.transitions.update(from_state.transitions)
+                        break
+                else:
+                    states.add(from_state)
             else:
                 from_state = parent_state
-            if from_state in states:
-                states.remove(from_state)
-                states.add(from_state)
-            else:
-                states.add(from_state)
             if to_state_name != '[*]':
                 to_state = State(to_state_name, parent_state)
+                for state in states:
+                    if to_state == state:
+                        state.sub_states.update(to_state.sub_states)
+                        state.transitions.update(to_state.transitions)
+                        break
+                else:
+                    states.add(to_state)
             else:
                 to_state = parent_state
-            if to_state in states:
-                states.remove(to_state)
-                states.add(to_state)
-            else:
-                states.add(to_state)
             transitions.add(Transition(from_state, to_state, events, actions, condition))
         return states, transitions
 
@@ -125,14 +150,15 @@ class PlantUMLParser:
             state_name = nested_state.group('name')
             state_comment = nested_state.group('comment')
             new_state = State(state_name, parent_state, state_comment)
-            if new_state in states:
-                states.remove(new_state)
-                states.add(new_state)
-            else:
-                states.add(new_state)
             body = nested_state.group('body')
             new_states, new_transitions = self._parse_instructions(body, new_state)
-            states.update(new_states)
+            for state in states:
+                if new_state == state:
+                    state.sub_states.update(new_state.sub_states)
+                    state.transitions.update(new_state.transitions)
+                    break
+            else:
+                states.add(new_state)
             transitions.update(new_transitions)
         return states, transitions
 
@@ -147,12 +173,18 @@ class PlantUMLParser:
             instructions = file.read()
             state_machine_name = os.path.basename(file_name)
             state_machine_name = state_machine_name.split('.')[0]
-            return self._parse_instructions(instructions, State(state_machine_name))
+            root = State(state_machine_name)
+            states, transitions = self._parse_instructions(instructions, root)
+            for transition in transitions:
+                transition_owner = _find_least_common_acesentor(root, [transition.from_state, transition.to_state])
+                if transition_owner is not None:
+                    transition_owner.transitions.add(transition)
+            return states, transitions
 
 
 if __name__ == '__main__':
     parser = PlantUMLParser()
-    states, transitions = parser.parse_uml_file('./tests/data/SimpleFSM.txt')
+    states, transitions = parser.parse_uml_file('./tests/data/TestFSM.txt')
     for state in states:
         print("=================")
         print("State name is " + state.name)
@@ -173,6 +205,6 @@ if __name__ == '__main__':
             print("  Action: " + str(ac))
         print("Transition condition: " + str(transition.condition))
 
-    # TODO(redra): Shoud be considered if needed to generate *.png
+    # TODO(redra): Should be considered if needed to generate *.png
     # from subprocess import call
     # call(['java', '-jar', './plantuml.jar'])

@@ -1,6 +1,6 @@
 /**
- * @file {{class_name}}.hpp
- * @date {{date}}
+ * @file .hpp
+ * @date 14 Jun 2018
  * @brief It is an auto-generated file.
  * It example of template for CommonAPI Client.
  * This class is not ready for production use.
@@ -8,22 +8,18 @@
  * @copyright Denis Kotov, MIT License. Open source: https://github.com/redradist/Inter-Component-Communication.git
  */
 
-#ifndef _{{state.name.upper()}}_HPP_
-#define _{{state.name.upper()}}_HPP_
+#ifndef _INACTIVE_HPP_
+#define _INACTIVE_HPP_
 
 #include <fsm/IState.hpp>
 
-class {{state.name}} : public IState {
+class Inactive : public IState {
  public:
   static
   std::shared_ptr<IState> buildState(std::weak_ptr<IState> _parent = std::weak_ptr<IState>()) {
-    return std::shared_ptr<{{state.name}}>(new {{state.name}}(_parent));
+    return std::shared_ptr<Inactive>(new Inactive(_parent));
   }
-  ~{{state.name}}();
-
-  {% if state.comment is not none -%}
-  std::string getStateName() const override;
-  {% endif -%}
+  ~Inactive();
 
   bool handleEvent(const IEvent & _ev) override;
 
@@ -34,7 +30,7 @@ class {{state.name}} : public IState {
               const IEvent &_ev) override;
 
  protected:
-  {{state.name}}(std::weak_ptr<IState> _parent);
+  Inactive(std::weak_ptr<IState> _parent);
 };
 
-#endif  // _{{state.name.upper()}}_HPP_
+#endif  // _INACTIVE_HPP_
