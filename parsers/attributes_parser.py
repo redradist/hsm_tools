@@ -92,14 +92,14 @@ def translate_to_common_abriviation():
 
 
 def _parse_objects(objs, owner=None):
-    attributes = set()
+    attributes = []
     for key, value in objs.items():
         if type(value) == str:
             att = Attribute(key, object=owner)
             if not is_valid_type(value):
                 raise ValueError('Invalid type. Type should be one of these: ' + str(__valid_types))
             att.attr_type = _convert_unified(value)
-            attributes.add(att)
+            attributes.append(att)
         elif type(value) == dict:
             atts = _parse_objects(value, key)
             att = Attribute(key, object=owner)
@@ -107,14 +107,14 @@ def _parse_objects(objs, owner=None):
             if hasattr(att, 'args'):
                 att.args = []
             att.args.extend(atts)
-            attributes.add(att)
+            attributes.append(att)
     return attributes
 
 
 def parse_str(text):
-    attributes = set()
+    attributes = []
     objs = json.loads(text)
-    attributes.update(_parse_objects(objs))
+    attributes.extend(_parse_objects(objs))
     return attributes
 
 

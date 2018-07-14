@@ -167,6 +167,10 @@ class Attribute:
         self.object = object
         self.name = name
         self.args = args
+        self.attr_type = None
+
+    def is_complex(self):
+        return self.args is not None and len(self.args) > 0
 
     def __str__(self):
         result = ''
