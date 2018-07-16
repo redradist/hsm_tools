@@ -1,10 +1,7 @@
 import io
 import json
-import tempfile
-from struct import Struct
-from typing import Tuple, Any
 
-from hsm_types import Attribute
+from src.hsm_types import Attribute
 
 __attributes_json = '''
 {

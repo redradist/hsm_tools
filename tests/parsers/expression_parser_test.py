@@ -1,8 +1,8 @@
 import unittest
 
-from hsm_types import Operator, Attribute, Indexer, Value, Function, String, Object, Expression, Group
-from parsers.expression_parser import ExpressionParser
-from exceptions import ValidationError
+from src.exceptions import ValidationError
+from src.hsm_types import Function, Value, Attribute, Group, Operator, String, Indexer, Expression, Object
+from src.parsers.expression_parser import ExpressionParser
 
 
 class TestingExpressionParser(unittest.TestCase):

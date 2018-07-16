@@ -1,7 +1,7 @@
 import unittest
 
-from hsm_types import Value, Function, Attribute
-from parsers.attributes_parser import parse_str
+from src.hsm_types import Attribute
+from src.parsers.attributes_parser import parse_str
 
 
 class TestingAttributesParser(unittest.TestCase):

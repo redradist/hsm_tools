@@ -1,4 +1,4 @@
-from exceptions import ValidationError
+from src.exceptions import ValidationError
 
 
 class StatementParser:

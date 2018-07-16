@@ -1,7 +1,7 @@
 import unittest
 
-from parsers.statement_parser import StatementParser
-from exceptions import ValidationError
+from src.parsers.statement_parser import StatementParser
+from src.exceptions import ValidationError
 
 
 class TestingStatementParser(unittest.TestCase):
