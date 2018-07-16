@@ -26,7 +26,7 @@
     {%- endfor -%}
   {%- endif -%}
   {%- if transition.condition is not none and transition.condition|length > 0 -%}
-    {{transition.condition}}(_ev)
+    {{transition.condition}}
   {% endif -%}
   ) {% endif %}{{- " else " if loop.last and transitions|length > 1 -}}
   {
@@ -53,8 +53,7 @@
   {%- if state.sub_states is not none and state.sub_states|length > 0 %}
   // Below added all states
   {%- for sub_state in state.sub_states %}
-  {
-    // Creation {{sub_state.name}} state
+  { // Creation {{sub_state.name}} state
     {% if sub_state.parent_attributes is not none and sub_state.parent_attributes|length > 0 -%}
     auto {{sub_state.name.lower()}}ExternalAttributesState = std::make_shared<ConnectExternAttributes>();
     {%- for parent_attribute in sub_state.parent_attributes %}
@@ -87,30 +86,36 @@ void {{state.name}}::exitTo(std::shared_ptr<IState> _to, const IEvent &_ev) {
 }
 
 bool {{state.name}}::handleEvent(const IEvent & _ev) {
+  bool isProcessed = false;
+
   // Below all transitions
-  {% for transition in state.internal_transitions() %}
-  {%- if (transition.event is not none and transition.event|length > 0) or (transition.condition is not none and transition.condition|length > 0) %}
-  if (
-  {%- if transition.event is not none and transition.event|length > 0 -%}
-    {%- for event in transition.event -%}
-        {{- "(" if loop.last and transition.event|length > 2 -}}
-        typeid({{event.name}}) == typeid(_ev)
-        {{- " || " if not loop.last -}}
-        {{- ")" if loop.last and transition.event|length > 2 -}}
-        {{- " && " if loop.last and transition.condition is not none and transition.condition|length > 0 -}}
-    {%- endfor -%}
-  {%- endif -%}
-  {%- if transition.condition is not none and transition.condition|length > 0 -%}
-    {{transition.condition}}(_ev)
-  {%- endif -%}
-  ){% endif %}
-  {
-    current_->exitTo(_to, _ev);
-    current_ = nullptr;
-    {{- "return;" if not loop.last }}
+  {% for transition in state.internal_transitions() -%}
+  {%- if (transition.event is not none and transition.event|length > 0) or (transition.condition is not none and transition.condition|length > 0) -%}
+  if (auto fromState = std::dynamic_pointer_cast<{{transition.from_state}}>(current_) &&
+      {% if transition.event is not none and transition.event|length > 0 -%}
+        {%- for event in transition.event -%}
+            {{- "(" if loop.last and transition.event|length > 2 -}}
+            typeid({{event.name}}) == typeid(_ev)
+            {{- " || " if not loop.last -}}
+            {{- ")" if loop.last and transition.event|length > 2 -}}
+            {{ " &&" if loop.last and transition.condition is not none and transition.condition|length > 0 }}
+        {%- endfor %}
+      {%- endif %}
+      {% if transition.condition is not none and transition.condition|length > 0 -%}
+        {{transition.condition}}
+      {%- endif -%}
+  ){% endif %} {
+    isProcessed = true;
+    auto toState = std::dynamic_pointer_cast<{{transition.to_state}}>(child_states_[{{transition.to_state.index}}]);
+    fromState->exitTo(toState, _ev);
+    {% for action in transition.action -%}
+    {{action}};
+    {% endfor -%}
+    toState->entryFrom(fromState, _ev);
+    current_ = toState;
   }
   {%- endfor %}
-  return false;
+  return isProcessed;
 }
 
 {% if state.comment is not none and state.comment|length > 0  -%}

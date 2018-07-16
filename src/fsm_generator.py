@@ -37,6 +37,20 @@ def generate_wrapper(state, templates, dir_to_save):
         generate_wrapper(sub_state, templates, dir_to_save)
 
 
+def _index_each_states(states, index):
+    for state in states:
+        state.index = index
+        index += 1
+        if state.sub_states:
+            _index_each_states(state.sub_states, 0)
+
+
+def _index_each_transitions(transitions, index):
+    for transition in transitions:
+        transition.index = index
+        index += 1
+
+
 def generate_fsm_wrappers(uml_diagram, dir_to_save, templates=[]):
     if len(templates) != 2:
         raise ValueError("Size of templates argument should be 2 : CommonAPI Client and CommonAPI Service")
@@ -48,6 +62,8 @@ def generate_fsm_wrappers(uml_diagram, dir_to_save, templates=[]):
 
     parser = PlantUMLParser()
     states, transitions = parser.parse_uml_file(uml_diagram)
+    _index_each_states(states, 0)
+    _index_each_transitions(transitions, 0)
     if len(states) == 0:
         raise ValueError("Size of states is zero. No work to do man !?")
 
