@@ -1,15 +1,12 @@
 import copy
 import regex as re
-import json
 
-from parsers.expression_parser import ExpressionParser
-from parsers.statement_parser import StatementParser
+from src.parsers.expression_parser import ExpressionParser
+from src.parsers.statement_parser import StatementParser
+from src.hsm_types import State, Transition, Event, Condition, Expression, Action
 
 ''
 'EvConfig / isAction(arg0, arg1) \n { arg0 = arg1;  [ arg0 == arg1 ] } //'
-
-from exceptions import ValidationError
-from hsm_types import State, Transition, Event, Condition, Expression, Action
 
 _state_declaration_regex = r"((?P<comment>\".*\")\s*as\s+)?\s*?(?P<name>\w+)\s*"
 _state_declaration = re.compile(_state_declaration_regex)

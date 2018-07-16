@@ -1,5 +1,3 @@
-
-
 class Expression:
     def __init__(self):
         self._items = []
