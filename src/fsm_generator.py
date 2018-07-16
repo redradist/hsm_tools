@@ -5,10 +5,11 @@ import datetime
 import itertools
 import re
 import traceback
-from sys import exc_info
 
+from sys import exc_info
 from jinja2 import Template
-from plantuml_parser import PlantUMLParser
+
+from src.plantuml_parser import PlantUMLParser
 
 
 def generate_wrapper(state, templates, dir_to_save):
@@ -76,8 +77,8 @@ if __name__ == '__main__':
     if args.default:
         if not args.templates:
             args.templates = []
-            args.templates.append(os.path.join(current_dir, "default_templates/StatesDefault.hpp.jinja2"))
-            args.templates.append(os.path.join(current_dir, "default_templates/StatesDefault.cpp.jinja2"))
+            args.templates.append(os.path.join(current_dir, "../templates/default/StatesDefault.hpp.jinja2"))
+            args.templates.append(os.path.join(current_dir, "../templates/default/StatesDefault.cpp.jinja2"))
     try:
         generate_fsm_wrappers(args.uml_diagram, args.dir_to_save, args.templates)
     except Exception as ex:
