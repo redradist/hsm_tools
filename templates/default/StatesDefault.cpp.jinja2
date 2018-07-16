@@ -102,7 +102,7 @@ bool {{state.name}}::handleEvent(const IEvent & _ev) {
         {%- endfor %}
       {%- endif %}
       {% if transition.condition is not none and transition.condition|length > 0 -%}
-        {{transition.condition}}
+        ({{transition.condition}}){{ " &&" if not loop.last }}
       {%- endif -%}
   ){% endif %} {
     isProcessed = true;
