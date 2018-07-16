@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import argparse
 import datetime
 import itertools
@@ -26,6 +28,8 @@ def generate_wrapper(state, templates, dir_to_save):
                 __comment_regex = r"\w+\.(?P<file_extension>\w+)\.\w+"
                 __comment = re.compile(__comment_regex)
                 file_extension = __comment.search(template_file_name).group(1)
+                if not os.path.exists(dir_to_save):
+                    os.mkdir(dir_to_save)
                 with open(dir_to_save + wrapper_name + "State." + file_extension, mode='w') as file_to_save:
                     file_to_save.write(files_output)
     for sub_state in state.sub_states:

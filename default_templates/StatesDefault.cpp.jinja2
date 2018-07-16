@@ -11,6 +11,43 @@
 {% endif %}
 #include "PCMEvents.hpp"
 
+{% macro transitions(transitions, action, comment='') -%}
+  {% if comment is not none %}// {{comment}} {% endif %}
+  {% for transition in transitions %}
+  {%- if (transition.event is not none and transition.event|length > 0) or (transition.condition is not none and transition.condition|length > 0) %}
+  {{- " else " if not loop.first }}if (
+  {%- if transition.event is not none and transition.event|length > 0 -%}
+    {%- for event in transition.event -%}
+        {{- "(" if loop.last and transition.event|length > 2 -}}
+        typeid({{event.name}}) == typeid(_ev)
+        {{- " || " if not loop.last -}}
+        {{- ")" if loop.last and transition.event|length > 2 -}}
+        {{- " && " if loop.last and transition.condition is not none and transition.condition|length > 0 -}}
+    {%- endfor -%}
+  {%- endif -%}
+  {%- if transition.condition is not none and transition.condition|length > 0 -%}
+    {{transition.condition}}(_ev)
+  {% endif -%}
+  ) {% endif %}{{- " else " if loop.last and transitions|length > 1 -}}
+  {
+    {%- if transition.action is not none and transition.action|length > 0 %}
+    {% for action in transition.action -%}
+    {% if action.name is not none -%}
+    {{action.name}}(_ev);
+    {%- else %}
+    // Unnamed action
+    [&_ev]() mutable {
+    {{action.body-}}
+    }();
+    {%- endif %}
+    {%- endfor %}
+    {%- endif %}
+    current_ = {{transition.to_state.name.lower()}}State;
+    current_->{{action}}(_from, _ev);
+  }
+  {%- endfor -%}
+{%- endmacro %}
+
 {{state.name}}::{{state.name}}(std::weak_ptr<IState> _parent)
     : IState(_parent) {
   {%- if state.sub_states is not none and state.sub_states|length > 0 %}
@@ -42,70 +79,16 @@
 }
 
 void {{state.name}}::entryFrom(std::shared_ptr<IState> _from, const IEvent &_ev) {
-  {%- if state.sub_states is not none and state.sub_states|length > 0 %}
-  // Below added all states
-
-  {%- for transition in state.initial_transitions() %}
-  {%- if (transition.event is not none and transition.event|length > 0) or (transition.condition is not none and transition.condition|length > 0) %}
-  {{ "else " if not loop.first }}if (
-  {%- if transition.event is not none and transition.event|length > 0 -%}
-    {%- for event in transition.event -%}
-        {{- "(" if loop.last and transition.event|length > 2 -}}
-        typeid({{event.name}}) == typeid(_ev)
-        {{- " || " if not loop.last -}}
-        {{- ")" if loop.last and transition.event|length > 2 -}}
-        {{- " && " if loop.last and transition.condition is not none and transition.condition|length > 0 -}}
-    {%- endfor -%}
-  {%- endif -%}
-  {%- if transition.condition is not none and transition.condition|length > 0 -%}
-    {{transition.condition}}(_ev)
-  {% endif -%}
-  ){%- endif %} {
-    {%- for action in transition.action %}
-    {%- if action.name is not none -%}
-    {{action.name}}(_ev);
-    {%- else %}
-    [&_ev]() mutable {{action.body}};
-    {%- endif %}
-    {%- endfor %}
-    current_ = {{transition.to_state.name.lower()}}State;
-    current_->entryFrom(_from, _ev);
-  }
-  {%- endfor -%}
-  {% endif %}
+  {{ transitions(state.initial_transitions(), 'exitTo', comment='Below all transitions onEntry') }}
 }
 
 void {{state.name}}::exitTo(std::shared_ptr<IState> _to, const IEvent &_ev) {
-  {%- if state.sub_states is not none and state.sub_states|length > 0 %}
-  // Below added all states
-  {%- for transition in state.final_transitions() %}
-  {%- if (transition.event is not none and transition.event|length > 0) or (transition.condition is not none and transition.condition|length > 0) %}
-  if (
-  {%- if transition.event is not none and transition.event|length > 0 -%}
-    {%- for event in transition.event -%}
-        {{- "(" if loop.last and transition.event|length > 2 -}}
-        typeid({{event.name}}) == typeid(_ev)
-        {{- " || " if not loop.last -}}
-        {{- ")" if loop.last and transition.event|length > 2 -}}
-        {{- " && " if loop.last and transition.condition is not none and transition.condition|length > 0 -}}
-    {%- endfor -%}
-  {%- endif -%}
-  {%- if transition.condition is not none and transition.condition|length > 0 -%}
-    {{transition.condition}}(_ev)
-  {% endif -%}
-  ){% endif %}
-  {
-    current_->exitTo(_to, _ev);
-    current_ = nullptr;
-    {{- "return;" if not loop.last }}
-  }
-  {%- endfor -%}
-  {% endif %}
+  {{ transitions(state.final_transitions(), 'entryFrom', comment='Below all transitions onExit') }}
 }
 
 bool {{state.name}}::handleEvent(const IEvent & _ev) {
-  // Below added all states
-  {%- for transition in state.internal_transitions() %}
+  // Below all transitions
+  {% for transition in state.internal_transitions() %}
   {%- if (transition.event is not none and transition.event|length > 0) or (transition.condition is not none and transition.condition|length > 0) %}
   if (
   {%- if transition.event is not none and transition.event|length > 0 -%}
@@ -119,14 +102,14 @@ bool {{state.name}}::handleEvent(const IEvent & _ev) {
   {%- endif -%}
   {%- if transition.condition is not none and transition.condition|length > 0 -%}
     {{transition.condition}}(_ev)
-  {% endif -%}
+  {%- endif -%}
   ){% endif %}
   {
     current_->exitTo(_to, _ev);
     current_ = nullptr;
     {{- "return;" if not loop.last }}
   }
-  {%- endfor -%}
+  {%- endfor %}
   return false;
 }
 
