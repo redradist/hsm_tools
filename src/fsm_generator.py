@@ -2,14 +2,13 @@
 
 import argparse
 import datetime
-import itertools
 import re
 import traceback
 
-from sys import exc_info
 from jinja2 import Template
 
-from src.plantuml_parser import PlantUMLParser
+from src.parsers.attributes_parser import AttributeParser
+from src.parsers.plantuml_parser import PlantUMLParser
 
 
 def generate_wrapper(state, templates, dir_to_save):
@@ -66,10 +65,12 @@ def generate_fsm_wrappers(uml_diagram, dir_to_save, templates=[]):
     elif dir_to_save[len(dir_to_save) - 1] != '/':
         dir_to_save += '/'
 
-    parser = PlantUMLParser()
-    states, transitions = parser.parse_uml_file(uml_diagram)
+    uml_parser = PlantUMLParser()
+    states, transitions = uml_parser.parse_uml_file(uml_diagram)
     _index_each_states(states, 0)
     _index_each_transitions(transitions, 0)
+    attribute_parser = AttributeParser()
+    attribute_parser.parse_file()
     if len(states) == 0:
         raise ValueError("Size of states is zero. No work to do man !?")
 

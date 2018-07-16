@@ -1,7 +1,7 @@
 import unittest
 
 from src.hsm_types import Attribute
-from src.parsers.attributes_parser import parse_str
+from src.parsers.attributes_parser import AttributeParser
 
 
 class TestingAttributesParser(unittest.TestCase):
@@ -12,6 +12,22 @@ class TestingAttributesParser(unittest.TestCase):
     def tearDown(self):
         """Currently nothing to do. Use it for reinitialization data after test"""
         pass
+
+    def test__FindAllAttributesFiles__Valid(self):
+        attribute_files = AttributeParser.find_all_attribute_files('../simple_fsm')
+        self.assertEqual(len(attribute_files), 1)
+
+    def test__ParseAllAttributesFiles__Valid(self):
+        attribute_files = AttributeParser.find_all_attribute_files('../simple_fsm')
+        self.assertEqual(len(attribute_files), 1)
+        attributes = []
+        parser = AttributeParser()
+        for attribute_file in attribute_files:
+            new_attributes = parser.parse_file(attribute_file[1])
+            if new_attributes:
+                attributes.extend(new_attributes)
+
+        self.assertEqual(len(attributes), 2)
 
     def test__OneAttributes0__Valid(self):
         example_json = '''
@@ -25,7 +41,8 @@ class TestingAttributesParser(unittest.TestCase):
             }
         }
         '''
-        attributes = parse_str(example_json)
+        parser = AttributeParser()
+        attributes = parser.parse_json(example_json)
         list_of_attributes = list(attributes)
         self.assertEqual(len(list_of_attributes), 1)
         attribute0 = list_of_attributes[0]
@@ -47,7 +64,8 @@ class TestingAttributesParser(unittest.TestCase):
             "id0": "Number"
         }
         '''
-        attributes = parse_str(example_json)
+        parser = AttributeParser()
+        attributes = parser.parse_json(example_json)
         list_of_attributes = list(attributes)
         self.assertEqual(len(list_of_attributes), 1)
         attribute0 = list_of_attributes[0]
@@ -68,7 +86,8 @@ class TestingAttributesParser(unittest.TestCase):
             "id4": "Boolean"
         }
         '''
-        attributes = parse_str(example_json)
+        parser = AttributeParser()
+        attributes = parser.parse_json(example_json)
         list_of_attributes = list(attributes)
         self.assertEqual(len(list_of_attributes), 2)
         attribute0 = list_of_attributes[0]
@@ -109,7 +128,8 @@ class TestingAttributesParser(unittest.TestCase):
             "id5": "Integer"
         }
         '''
-        attributes = parse_str(example_json)
+        parser = AttributeParser()
+        attributes = parser.parse_json(example_json)
         list_of_attributes = list(attributes)
         self.assertEqual(len(list_of_attributes), 3)
         attribute0 = list_of_attributes[0]
@@ -157,7 +177,8 @@ class TestingAttributesParser(unittest.TestCase):
             "id5": "Integer"
         }
         '''
-        attributes = parse_str(example_json)
+        parser = AttributeParser()
+        attributes = parser.parse_json(example_json)
         list_of_attributes = list(attributes)
         self.assertEqual(len(list_of_attributes), 3)
         attribute0 = list_of_attributes[0]

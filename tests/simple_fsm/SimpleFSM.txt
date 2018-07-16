@@ -2,14 +2,17 @@
 
 !include NotShooting.txt
 
-[*] --> PCM_FSM
-PCM_FSM --> [*]
+[*] --> SimpleFSM
+SimpleFSM --> [*]
 
-state "Not Shooting State 2" as PCM_FSM {
+state "Simple FSM (Example)" as SimpleFSM {
   state "Idle mode" as Inactive
   state "Configuring mode" as Active
+  [*] --> Inactive : startOn{} / Action(), () { return 1; }
+  [*] --> Inactive : powerOn{}
   [*] --> Inactive
-  Inactive --> Active : powerOn{} / Action() {}, Action2() [ i > k ]
+  Inactive --> Active : powerOn{} / Action() {}, Action2() [ name.size() > default_name.size() ]
+  Active --> [*]
 }
 
 @enduml
