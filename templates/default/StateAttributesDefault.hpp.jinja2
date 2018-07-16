@@ -1,0 +1,20 @@
+/**
+ * @file {{state.attributes.name}}.hpp
+ * @date {{date}}
+ * @brief It is an auto-generated file.
+ * It example of template for CommonAPI Client.
+ * This class is not ready for production use.
+ * See project ICC: https://github.com/redradist/Inter-Component-Communication.git where it is more mature
+ * @copyright Denis Kotov, MIT License. Open source: https://github.com/redradist/Inter-Component-Communication.git
+ */
+
+#ifndef _{{state.name.upper()}}_ATTRIBUTES_HPP_
+#define _{{state.name.upper()}}_ATTRIBUTES_HPP_
+
+struct {{state.name}}{{state.attributes.name}}Attributes {
+  {%- for attribute in state.attributes %}
+    {{attribute.attr_type}} {{attribute.name}};
+  {%- endfor -%}
+};
+
+#endif  // _{{state.name.upper()}}_ATTRIBUTES_HPP_

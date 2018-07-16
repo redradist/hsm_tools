@@ -16,6 +16,7 @@ def generate_wrapper(state, templates, dir_to_save):
     current_datetime = datetime.datetime.now()
     current_date = current_datetime.strftime("%d %b %Y")
 
+    index = 0
     for template_file_name in templates:
         if template_file_name:
             with open(template_file_name, 'r') as file:
@@ -26,13 +27,18 @@ def generate_wrapper(state, templates, dir_to_save):
                 files_output = template.render(state=state,
                                                date=current_date)
                 wrapper_name = state.name
-                __comment_regex = r"\w+\.(?P<file_extension>\w+)\.\w+"
-                __comment = re.compile(__comment_regex)
-                file_extension = __comment.search(template_file_name).group(1)
+                __file_extension_regex = r"\w+\.(?P<file_extension>\w+)\.\w+"
+                __file_extension = re.compile(__file_extension_regex)
+                file_extension = __file_extension.search(template_file_name).group(1)
                 if not os.path.exists(dir_to_save):
                     os.mkdir(dir_to_save)
-                with open(dir_to_save + wrapper_name + "State." + file_extension, mode='w') as file_to_save:
-                    file_to_save.write(files_output)
+                if index < 2:
+                    with open(dir_to_save + wrapper_name + "State." + file_extension, mode='w') as file_to_save:
+                        file_to_save.write(files_output)
+                else:
+                    with open(dir_to_save + wrapper_name + "StateAttributes." + file_extension, mode='w') as file_to_save:
+                        file_to_save.write(files_output)
+        index += 1
     for sub_state in state.sub_states:
         generate_wrapper(sub_state, templates, dir_to_save)
 
@@ -52,8 +58,8 @@ def _index_each_transitions(transitions, index):
 
 
 def generate_fsm_wrappers(uml_diagram, dir_to_save, templates=[]):
-    if len(templates) != 2:
-        raise ValueError("Size of templates argument should be 2 : CommonAPI Client and CommonAPI Service")
+    if len(templates) != 3:
+        raise ValueError("Size of templates argument should be 3 : CommonAPI Client and CommonAPI Service")
 
     if len(dir_to_save) == 0:
         raise ValueError("dir_to_save is empty !!")
@@ -93,8 +99,9 @@ if __name__ == '__main__':
     if args.default:
         if not args.templates:
             args.templates = []
-            args.templates.append(os.path.join(current_dir, "../templates/default/StatesDefault.hpp.jinja2"))
-            args.templates.append(os.path.join(current_dir, "../templates/default/StatesDefault.cpp.jinja2"))
+            args.templates.append(os.path.join(current_dir, "../templates/default/StateDefault.hpp.jinja2"))
+            args.templates.append(os.path.join(current_dir, "../templates/default/StateDefault.cpp.jinja2"))
+            args.templates.append(os.path.join(current_dir, "../templates/default/StateAttributesDefault.hpp.jinja2"))
     try:
         generate_fsm_wrappers(args.uml_diagram, args.dir_to_save, args.templates)
     except Exception as ex:
