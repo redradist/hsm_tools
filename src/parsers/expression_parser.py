@@ -41,10 +41,10 @@ class ExpressionParser:
         return ch in ['\'', '\"']
 
     def is_first_name_letter(self, ch):
-        return ch.isalpha() or ch == ':'
+        return ch.isalpha() or ch == '_' or ch == ':'
 
     def is_name_letter(self, ch):
-        return ch.isalnum() or ch == ':'
+        return ch.isalnum() or ch == '_' or ch == ':'
 
     def parse_text(self, ch):
         if self.is_name_letter(ch):

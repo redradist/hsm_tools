@@ -23,6 +23,15 @@ class TestingExpressionParser(unittest.TestCase):
         self.assertEqual(type(expression.args[0]), Value)
         self.assertEqual(expression.args[0].value, '2')
 
+    def test__ActionUnderScoreNameArgValue__Valid(self):
+        example = "my_action(2)"
+        parser = ExpressionParser(example)
+        expression = parser.parse()
+        self.assertEqual(type(expression), Function)
+        self.assertEqual(len(expression.args), 1)
+        self.assertEqual(type(expression.args[0]), Value)
+        self.assertEqual(expression.args[0].value, '2')
+
     def test__ActionArgAttribute__Valid(self):
         example = "Action2(k)"
         parser = ExpressionParser(example)
