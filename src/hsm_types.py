@@ -170,6 +170,47 @@ class Attribute:
     def is_complex(self):
         return self.args is not None and len(self.args) > 0
 
+    def get_import_modules_for(self, language):
+        if language == 'c' or language == 'C':
+            if self.attr_type == 'String':
+                return '#include <string.h>'
+        elif language == 'cxx' or \
+             language == 'cpp' or \
+             language == 'Cxx' or \
+             language == 'Cpp' or \
+             language == 'c++' or \
+             language == 'C++':
+                return '#include <string>'
+
+    def get_type_for(self, language):
+        if language == 'c' or language == 'C':
+            if self.attr_type == 'String':
+                return 'const char *'
+            else:
+                return 'Unknown'
+        elif language == 'cxx' or \
+             language == 'cpp' or \
+             language == 'Cxx' or \
+             language == 'Cpp' or \
+             language == 'c++' or \
+             language == 'C++':
+            if self.attr_type == 'String':
+                return 'std::string'
+            elif self.attr_type == 'Boolean':
+                return 'bool'
+            elif self.attr_type == 'Number':
+                return 'double'
+            elif self.attr_type == 'Integer':
+                return 'int'
+            elif self.attr_type == 'Float':
+                return 'float'
+            elif self.attr_type == 'Double':
+                return 'double'
+            else:
+                return 'Unknown'
+        else:
+            return 'Unknown'
+
     def __str__(self):
         result = ''
         if self.object:

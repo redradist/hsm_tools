@@ -1,8 +1,8 @@
-# hsm_tools
+# HSM Tools
 
 ## Description:
-It is the project for generating all kinds of FSM (HSM - hierarhic state machine)
+It is the project for generating all kinds of **FSM** (**F**inite **S**tate **M**achine), **HSM** (**H**ierarchical **S**tate **M**achine)
 
-## Supoorted formats:
-Currently supported only one format plantuml http://plantuml.com/state-diagram and it is right now is early stage
+## Supported formats:
+Currently supported only one format plantuml http://plantuml.com/state-diagram and it is right now is early stage.
 Other formats is coming ...

@@ -67,15 +67,26 @@ def generate_fsm_wrappers(uml_diagram, dir_to_save, templates=[]):
 
     uml_parser = PlantUMLParser()
     states, transitions = uml_parser.parse_uml_file(uml_diagram)
-    _index_each_states(states, 0)
-    _index_each_transitions(transitions, 0)
-    attribute_parser = AttributeParser()
-    attribute_parser.parse_file()
+
     if len(states) == 0:
         raise ValueError("Size of states is zero. No work to do man !?")
 
     if len(transitions) == 0:
         raise ValueError("Size of transitions is zero. No work to do man !?")
+
+    _index_each_states(states, 0)
+    _index_each_transitions(transitions, 0)
+    attr_files = AttributeParser.find_all_attribute_files(os.path.dirname(uml_diagram))
+    attribute_parser = AttributeParser()
+    for state in states:
+        for fl in attr_files:
+            if fl is not None:
+                attr_state_name = fl[0]
+                attr_file_name = fl[1]
+                if state.name == attr_state_name:
+                    attrs = attribute_parser.parse_file(attr_file_name)
+                    state.attributes = attrs
+                    break
 
     for state in states:
         generate_wrapper(state, templates, dir_to_save)

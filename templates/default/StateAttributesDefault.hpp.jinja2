@@ -11,10 +11,28 @@
 #ifndef _{{state.name.upper()}}_ATTRIBUTES_HPP_
 #define _{{state.name.upper()}}_ATTRIBUTES_HPP_
 
+{%- macro custom_attribute(attribute) %}
+struct {{attribute.name|title}}Type {
+  {%- for attr in attribute.args %}
+  {%- if attr.attr_type == none and attr.args|length > 0 %}
+  {{ custom_attribute(attr)|indent(2) }}
+  {{attr.name|title}}Type {{attr.name}}_;
+  {%- else %}
+  {{attr.get_type_for('cpp')}} {{attr.name}}_;
+  {%- endif %}
+  {%- endfor %}
+};
+{%- endmacro %}
+
 struct {{state.name}}{{state.attributes.name}}Attributes {
   {%- for attribute in state.attributes %}
-    {{attribute.attr_type}} {{attribute.name}};
-  {%- endfor -%}
+  {%- if attribute.attr_type == none and attribute.args|length > 0 %}
+  {{ custom_attribute(attribute)|indent(2) }}
+  {{attribute.name|title}}Type {{attribute.name}}_;
+  {%- else %}
+  {{attribute.get_type_for('cpp')}} {{attribute.name}}_;
+  {%- endif %}
+  {%- endfor %}
 };
 
 #endif  // _{{state.name.upper()}}_ATTRIBUTES_HPP_
