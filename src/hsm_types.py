@@ -47,7 +47,7 @@ class State:
     def __init__(self, name, parent_state=None, comment=None):
         self.sub_states = set()
         self.transitions = set()
-        self.attributes = set()
+        self.attributes = dict()
         if parent_state is not None and name == '[*]':
             self.name = parent_state.name
             self.parent_state = parent_state.parent_state

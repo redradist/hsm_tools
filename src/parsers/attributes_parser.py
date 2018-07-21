@@ -99,10 +99,18 @@ class AttributeParser:
     def find_all_attribute_files(path):
         files = []
         for f in os.listdir(path):
-            match = re.match(r'(?P<state_name>\w+)Attributes.(json|yaml)', f)
-            if match:
-                full_file_path = os.path.abspath(path) + '/' + f
-                files.append((match.group("state_name"), full_file_path))
+            full_file_path = os.path.abspath(path) + '/' + f
+            match0 = re.match(r'(?P<state_name>\w+)_(?P<attributes_name>\w+)Attributes.(json|yaml)', f)
+            match1 = re.match(r'(?P<state_name>\w+)Attributes.(json|yaml)', f)
+            if match0:
+                state_name = match0.group("state_name")
+                attributes_name = match0.group("attributes_name")
+                files.append(({"state_name": state_name,
+                               "attributes_name": attributes_name}, full_file_path))
+            elif match1:
+                state_name = match1.group("state_name")
+                files.append(({"state_name": state_name,
+                               "attributes_name": None}, full_file_path))
         return files
 
     def parse_file(self, attribute_file):

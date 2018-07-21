@@ -1,0 +1,11 @@
+{
+  "name": "String",
+  "default_name": "String",
+  "age": "Int",
+  "manual": {
+    "voltage": "Double",
+    "manual2": {
+      "voltage": "Double"
+    }
+  }
+}

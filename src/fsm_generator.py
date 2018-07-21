@@ -27,8 +27,7 @@ def generate_wrapper(state, templates, dir_to_save):
                 # NOTE(redra): Uncomment if you want to use default generator without extensions
                 # template = Template(lines)
                 template = jinja2_do_ext.from_string(lines)
-                files_output = template.render(state=state,
-                                               date=current_date)
+
                 wrapper_name = state.name
                 __file_extension_regex = r"\w+\.(?P<file_extension>\w+)\.\w+"
                 __file_extension = re.compile(__file_extension_regex)
@@ -36,11 +35,22 @@ def generate_wrapper(state, templates, dir_to_save):
                 if not os.path.exists(dir_to_save):
                     os.mkdir(dir_to_save)
                 if index < 2:
-                    with open(dir_to_save + wrapper_name + "State." + file_extension, mode='w') as file_to_save:
+                    files_output = template.render(state=state,
+                                                   date=current_date)
+                    with open(dir_to_save + wrapper_name + "_State." + file_extension, mode='w') as file_to_save:
                         file_to_save.write(files_output)
                 else:
-                    with open(dir_to_save + wrapper_name + "StateAttributes." + file_extension, mode='w') as file_to_save:
-                        file_to_save.write(files_output)
+                    for attributes_name, attributes in state.attributes.items():
+                        files_output = template.render(state_name=state.name,
+                                                       attributes_name=attributes_name,
+                                                       attributes=attributes,
+                                                       date=current_date)
+                        if attributes_name:
+                            file_name_to_save = dir_to_save + wrapper_name + "_" + attributes_name + "Attributes." + file_extension
+                        else:
+                            file_name_to_save = dir_to_save + wrapper_name + "_Attributes." + file_extension
+                        with open(file_name_to_save, mode='w') as file_to_save:
+                            file_to_save.write(files_output)
         index += 1
     for sub_state in state.sub_states:
         generate_wrapper(sub_state, templates, dir_to_save)
@@ -85,12 +95,12 @@ def generate_fsm_wrappers(uml_diagram, dir_to_save, templates=[]):
     for state in states:
         for fl in attr_files:
             if fl is not None:
-                attr_state_name = fl[0]
+                attr_state_name = fl[0]['state_name']
+                attrs_name = fl[0]['attributes_name']
                 attr_file_name = fl[1]
                 if state.name == attr_state_name:
                     attrs = attribute_parser.parse_file(attr_file_name)
-                    state.attributes = attrs
-                    break
+                    state.attributes.update({attrs_name: attrs})
 
     for state in states:
         generate_wrapper(state, templates, dir_to_save)

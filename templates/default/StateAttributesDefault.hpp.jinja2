@@ -1,5 +1,5 @@
 /**
- * @file {{state.attributes.name}}.hpp
+ * @file {{attributes_name}}.hpp
  * @date {{date}}
  * @brief It is an auto-generated file.
  * It example of template for CommonAPI Client.
@@ -8,11 +8,16 @@
  * @copyright Denis Kotov, MIT License. Open source: https://github.com/redradist/Inter-Component-Communication.git
  */
 
-#ifndef _{{state.name.upper()}}_ATTRIBUTES_HPP_
-#define _{{state.name.upper()}}_ATTRIBUTES_HPP_
+{% if attributes_name is not none -%}
+#ifndef _{{state_name.upper()}}_{{attributes_name.upper()}}_ATTRIBUTES_HPP_
+#define _{{state_name.upper()}}_{{attributes_name.upper()}}_ATTRIBUTES_HPP_
+{% else -%}
+#ifndef _{{state_name.upper()}}_ATTRIBUTES_HPP_
+#define _{{state_name.upper()}}_ATTRIBUTES_HPP_
+{%- endif %}
 
 {% set imported=[] -%}
-{% for attribute in state.attributes -%}
+{% for attribute in attributes -%}
   {% if attribute.get_import_modules_for('cpp') not in imported -%}
   {{attribute.get_import_modules_for('cpp')}}
   {%- do imported.append(attribute.get_import_modules_for('cpp')) -%}
@@ -32,8 +37,8 @@ struct {{attribute.name|title}}Type {
 };
 {%- endmacro %}
 
-struct {{state.name}}{{state.attributes.name}}Attributes {
-  {%- for attribute in state.attributes %}
+struct {{state_name}}{{attributes_name}}Attributes {
+  {%- for attribute in attributes %}
   {%- if attribute.attr_type == none and attribute.args|length > 0 %}
   {{ custom_attribute(attribute)|indent(2) }}
   {{attribute.name|title}}Type {{attribute.name}}_;
@@ -43,4 +48,8 @@ struct {{state.name}}{{state.attributes.name}}Attributes {
   {%- endfor %}
 };
 
-#endif  // _{{state.name.upper()}}_ATTRIBUTES_HPP_
+{% if attributes_name is not none -%}
+#endif  // _{{state_name.upper()}}_{{attributes_name.upper()}}_ATTRIBUTES_HPP_
+{% else %}
+#endif  // _{{state_name.upper()}}_ATTRIBUTES_HPP_
+{%- endif %}
