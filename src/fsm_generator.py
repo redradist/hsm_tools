@@ -5,11 +5,12 @@ import datetime
 import re
 import traceback
 
-from jinja2 import Template
+from jinja2 import Template, Environment
 
 from src.parsers.attributes_parser import AttributeParser
 from src.parsers.plantuml_parser import PlantUMLParser
 
+jinja_do_ext = Environment(extensions=['jinja2.ext.do'])
 
 def generate_wrapper(state, templates, dir_to_save):
     current_datetime = datetime.datetime.now()
@@ -22,7 +23,8 @@ def generate_wrapper(state, templates, dir_to_save):
                 lines = file.readlines()
                 lines = "".join(lines)
 
-                template = Template(lines)
+                # template = Template(lines)
+                template = jinja_do_ext.from_string(lines)
                 files_output = template.render(state=state,
                                                date=current_date)
                 wrapper_name = state.name

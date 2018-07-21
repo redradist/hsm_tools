@@ -11,6 +11,14 @@
 #ifndef _{{state.name.upper()}}_ATTRIBUTES_HPP_
 #define _{{state.name.upper()}}_ATTRIBUTES_HPP_
 
+{% set imported=[] -%}
+{% for attribute in state.attributes -%}
+  {% if attribute.get_import_modules_for('cpp') not in imported -%}
+  {{attribute.get_import_modules_for('cpp')}}
+  {%- do imported.append(attribute.get_import_modules_for('cpp')) -%}
+  {%- endif %}
+{%- endfor %}
+
 {%- macro custom_attribute(attribute) %}
 struct {{attribute.name|title}}Type {
   {%- for attr in attribute.args %}
