@@ -1,3 +1,4 @@
+import copy
 import io
 import json
 import os
@@ -47,8 +48,12 @@ class AttributeParser:
                      'str', 'Str',
                      'string', 'String']
 
+    def __init__(self, extern_attribs=set()):
+        self.extern_attribs = copy.deepcopy(extern_attribs)
+
     def is_valid_type(self, type):
-        return type in AttributeParser.__valid_types
+        return type in AttributeParser.__valid_types or \
+               type in self.extern_attribs
 
     def _convert_unified(self, type):
         if self.is_valid_type(type):
@@ -66,6 +71,8 @@ class AttributeParser:
                 return 'Number'
             elif type in ['str', 'Str', 'string', 'String']:
                 return 'String'
+            else:
+                return type
 
     def _parse_objects(self, objs, owner=None):
         attributes = []
@@ -97,21 +104,19 @@ class AttributeParser:
 
     @staticmethod
     def find_all_attribute_files(path):
-        files = []
+        attrib_files = []
+        state_attrib_files = []
         for f in os.listdir(path):
             full_file_path = os.path.abspath(path) + '/' + f
-            match0 = re.match(r'(?P<state_name>\w+)_(?P<attributes_name>\w+)Attributes.(json|yaml)', f)
-            match1 = re.match(r'(?P<state_name>\w+)Attributes.(json|yaml)', f)
+            match0 = re.match(r'^(?P<attributes_name>[a-zA-Z0-9]+)Attributes.(json|yaml)$', f)
+            match1 = re.match(r'^(?P<state_name>\w+)_Attributes.(json|yaml)$', f)
             if match0:
-                state_name = match0.group("state_name")
                 attributes_name = match0.group("attributes_name")
-                files.append(({"state_name": state_name,
-                               "attributes_name": attributes_name}, full_file_path))
+                attrib_files.append((attributes_name, full_file_path))
             elif match1:
                 state_name = match1.group("state_name")
-                files.append(({"state_name": state_name,
-                               "attributes_name": None}, full_file_path))
-        return files
+                state_attrib_files.append((state_name, full_file_path))
+        return attrib_files, state_attrib_files
 
     def parse_file(self, attribute_file):
         if type(attribute_file) == str:

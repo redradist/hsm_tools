@@ -1,9 +1,0 @@
-# An employee record
-name: String
-  name: String
-  id0: Number
-
-name: String
-id0: Number
-id1: Integer
-id2: Real

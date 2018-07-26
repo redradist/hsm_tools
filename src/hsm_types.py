@@ -47,7 +47,7 @@ class State:
     def __init__(self, name, parent_state=None, comment=None):
         self.sub_states = set()
         self.transitions = set()
-        self.attributes = dict()
+        self.attributes = set()
         if parent_state is not None and name == '[*]':
             self.name = parent_state.name
             self.parent_state = parent_state.parent_state
@@ -187,7 +187,7 @@ class Attribute:
             if self.attr_type == 'String':
                 return 'const char *'
             else:
-                return 'Unknown'
+                return self.attr_type
         elif language == 'cxx' or \
              language == 'cpp' or \
              language == 'Cxx' or \
@@ -207,7 +207,7 @@ class Attribute:
             elif self.attr_type == 'Double':
                 return 'double'
             else:
-                return 'Unknown'
+                return self.attr_type
         else:
             return 'Unknown'
 
