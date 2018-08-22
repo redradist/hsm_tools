@@ -1,5 +1,5 @@
 /**
- * @file {{class_name}}.hpp
+ * @file {{state.name}}_State.hpp
  * @date {{date}}
  * @brief It is an auto-generated file.
  * It example of template for CommonAPI Client.
@@ -13,13 +13,13 @@
 
 #include <fsm/IState.hpp>
 
-class {{state.name}} : public IState {
+class {{state.name}}_State : public IState {
  public:
   static
   std::shared_ptr<IState> buildState(std::weak_ptr<IState> _parent = std::weak_ptr<IState>()) {
-    return std::shared_ptr<{{state.name}}>(new {{state.name}}(_parent));
+    return std::shared_ptr<{{state.name}}_State>(new {{state.name}}_State(_parent));
   }
-  ~{{state.name}}();
+  ~{{state.name}}_State();
 
   {% if state.comment is not none -%}
   std::string getStateName() const override;
@@ -34,7 +34,7 @@ class {{state.name}} : public IState {
               const IEvent &_ev) override;
 
  protected:
-  {{state.name}}(std::weak_ptr<IState> _parent);
+  {{state.name}}_State(std::weak_ptr<IState> _parent);
 };
 
 #endif  // _{{state.name.upper()}}_HPP_

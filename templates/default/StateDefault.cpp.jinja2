@@ -2,7 +2,7 @@
 #define _{{state.name.upper()}}_HPP_
 
 #include <iostream>
-#include "{{state.name}}.hpp"
+#include "{{state.name}}_State.cpp"
 {%- if state.sub_states is not none and state.sub_states|length > 0 %}
 {%- for sub_state in state.sub_states %}
 #include "{{sub_state.name}}/{{sub_state.name}}ExternalAttributesState.hpp"
@@ -48,7 +48,7 @@
   {%- endfor -%}
 {%- endmacro %}
 
-{{state.name}}::{{state.name}}(std::weak_ptr<IState> _parent)
+{{state.name}}_State::{{state.name}}_State(std::weak_ptr<IState> _parent)
     : IState(_parent) {
   {%- if state.sub_states is not none and state.sub_states|length > 0 %}
   // Below added all states
@@ -74,18 +74,18 @@
   {% endif %}
 }
 
-{{state.name}}::~{{state.name}}() {
+{{state.name}}_State::~{{state.name}}_State() {
 }
 
-void {{state.name}}::entryFrom(std::shared_ptr<IState> _from, const IEvent &_ev) {
+void {{state.name}}_State::entryFrom(std::shared_ptr<IState> _from, const IEvent &_ev) {
   {{ transitions(state.initial_transitions(), 'exitTo', comment='Below all transitions onEntry') }}
 }
 
-void {{state.name}}::exitTo(std::shared_ptr<IState> _to, const IEvent &_ev) {
+void {{state.name}}_State::exitTo(std::shared_ptr<IState> _to, const IEvent &_ev) {
   {{ transitions(state.final_transitions(), 'entryFrom', comment='Below all transitions onExit') }}
 }
 
-bool {{state.name}}::handleEvent(const IEvent & _ev) {
+bool {{state.name}}_State::handleEvent(const IEvent & _ev) {
   bool isProcessed = false;
 
   // Below all transitions
@@ -119,7 +119,7 @@ bool {{state.name}}::handleEvent(const IEvent & _ev) {
 }
 
 {% if state.comment is not none and state.comment|length > 0  -%}
-std::string {{state.name}}::getStateName() const {
+std::string {{state.name}}_State::getStateName() const {
   return IState::getStateName() + std::string(": ") + {{state.comment}};
 }
 {%- endif %}
