@@ -4,7 +4,7 @@ import json
 import os
 import re
 
-from src.hsm_types import Attribute
+from src.fsm_types import Attribute
 
 __attributes_json = '''
 {

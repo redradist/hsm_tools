@@ -1,0 +1,3 @@
+{
+  "external_actions": "FSMActions.hpp" // Header file for external  actions
+}

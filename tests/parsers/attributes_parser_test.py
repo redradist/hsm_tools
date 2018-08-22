@@ -1,6 +1,6 @@
 import unittest
 
-from src.hsm_types import Attribute
+from src.fsm_types import Attribute
 from src.parsers.attributes_parser import AttributeParser
 
 

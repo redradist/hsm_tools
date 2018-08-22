@@ -3,7 +3,7 @@ import regex as re
 
 from src.parsers.expression_parser import ExpressionParser
 from src.parsers.statement_parser import StatementParser
-from src.hsm_types import State, Transition, Event, Condition, Expression, Action
+from src.fsm_types import State, Transition, Event, Condition, Expression, Action
 
 ''
 'EvConfig / isAction(arg0, arg1) \n { arg0 = arg1;  [ arg0 == arg1 ] } //'
