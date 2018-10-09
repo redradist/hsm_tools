@@ -21,24 +21,22 @@
 
 namespace {{fsm_name}} {
 
-{%- macro custom_attribute(attribute) %}
+{%- macro anonymous_attribute(attribute) %}
 struct {{attribute.name|title}}Type {
   {%- for attr in attribute.args %}
   {%- if attr.attr_type == none and attr.args|length > 0 %}
-  {{ custom_attribute(attr)|indent(2) }}
-  {{attr.name|title}}Type {{attr.name}}_;
+  {{ anonymous_attribute(attr)|indent(2) }} {{attr.name}}_;
   {%- else %}
   {{attr.get_type_for('cpp')}} {{attr.name}}_;
   {%- endif %}
   {%- endfor %}
-};
+}
 {%- endmacro %}
 
 struct {{struct_name}}Attributes {
   {%- for attribute in attributes %}
   {%- if attribute.attr_type == none and attribute.args|length > 0 %}
-  {{ custom_attribute(attribute)|indent(2) }}
-  {{attribute.name|title}}Type {{attribute.name}}_;
+  {{ anonymous_attribute(attribute)|indent(2) }} {{attribute.name}}_;
   {%- else %}
   {{attribute.get_type_for('cpp')}} {{attribute.name}}_;
   {%- endif %}

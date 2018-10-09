@@ -36,9 +36,9 @@
     {{action.name}}(_ev);
     {%- else %}
     // Unnamed action
-    [&_ev]() mutable {
-    {{action.body-}}
-    }();
+    [&](const IEvent & _ev) mutable {
+    {{action.body}}
+    }(_ev);
     {%- endif %}
     {%- endfor %}
     {%- endif %}
@@ -55,7 +55,7 @@
   {%- for sub_state in state.sub_states %}
   { // Creation {{sub_state.name}} state
     {% if sub_state.parent_attributes is not none and sub_state.parent_attributes|length > 0 -%}
-    auto {{sub_state.name.lower()}}ExternalAttributesState = std::make_shared<ConnectExternAttributes>();
+    auto {{sub_state.name.lower()}}ExternalAttributesState = std::make_shared<{{sub_state.name}}ExternAttributes>();
     {%- for parent_attribute in sub_state.parent_attributes %}
     {% if parent_attribute.state_owner == state -%}
     {{sub_state.name.lower()}}ExternalAttributesState->{{parent_attribute.name}} = attributes_->{{parent_attribute.name}};
