@@ -53,7 +53,7 @@ class FSMBuilder:
         uml_parser = PlantUMLParser()
         sub_states, transitions = uml_parser.parse_uml_file(uml_diagram)
         fsm_name = os.path.splitext(os.path.basename(uml_diagram))[0]
-        fsm = State(fsm_name)
+        fsm = State.create_state(fsm_name)
 
         FSMBuilder._index_each_states(sub_states, 0)
         FSMBuilder._index_each_transitions(transitions, 0)
@@ -72,5 +72,4 @@ class FSMBuilder:
         fsm.sub_states = sub_states
         for tran in transitions:
             tran.action = FSMBuilder._find_tran_action(tran)
-        fsm.transitions = transitions
         return fsm
