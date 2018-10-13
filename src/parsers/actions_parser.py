@@ -77,6 +77,18 @@ class ActionParser:
             actions.append(function)
         return actions
 
+    def parse_external(self, external_actions, path):
+        actions = []
+        for external in external_actions:
+            import_statement = external['import']
+            using_as = external['using']
+            ex_actions = external['actions']
+            for ac in ex_actions:
+                function = Function(name=ac)
+                function.full_name = using_as + ac
+                actions.append(function)
+        return actions
+
     def find_all_action_for(self, path, state_name):
         actions = []
         for f in os.listdir(path):
@@ -91,7 +103,9 @@ class ActionParser:
                         temp_actions = objects['actions']
                         internal_actions = temp_actions['internal']
                         external_actions = temp_actions['external']
-                        actions = self.parse_internal(internal_actions, path)
+                        actions = []
+                        actions.extend(self.parse_internal(internal_actions, path))
+                        actions.extend(self.parse_external(external_actions, path))
                         break
             elif match_state_actions_json:
                 with open(full_file_path, 'r') as f:
@@ -100,4 +114,5 @@ class ActionParser:
                     internal_actions = temp_actions['internal']
                     external_actions = temp_actions['external']
                     actions.extend(self.parse_internal(internal_actions, path))
+                    actions.extend(self.parse_external(external_actions, path))
         return actions

@@ -1,13 +1,15 @@
 {
   "actions": {
-    "external": {
-      "import": "FSMActions.hpp",
-      "using": "FSMActions::",
-      "actions": [
-        "Action2",
-        "Action3"
-      ]
-    },
+    "external": [
+       {
+        "import": "FSMActions.hpp",
+        "using": "FSMActions::",
+        "actions": [
+          "Action2",
+          "Action3"
+        ]
+      }
+    ],
     "internal" : {
       "Action" : [
         "(int i, int k) {",
