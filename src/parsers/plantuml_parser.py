@@ -159,6 +159,12 @@ class PlantUMLParser:
             transitions.update(new_transitions)
         return states, transitions
 
+    def _tie_transitions_to_states(self, transitions, root):
+        for transition in transitions:
+            transition_owner = _find_least_common_acesentor(root, [transition.from_state, transition.to_state])
+            if transition_owner is not None:
+                transition_owner.transitions.add(transition)
+
     def parse_uml_file(self, file_name):
         """
         Function for parsing PlantUML State Machine
@@ -172,16 +178,13 @@ class PlantUMLParser:
             state_machine_name = state_machine_name.split('.')[0]
             root = State(state_machine_name)
             states, transitions = self._parse_instructions(instructions, root)
-            for transition in transitions:
-                transition_owner = _find_least_common_acesentor(root, [transition.from_state, transition.to_state])
-                if transition_owner is not None:
-                    transition_owner.transitions.add(transition)
+            self._tie_transitions_to_states(transitions, root)
             return states, transitions
 
 
 if __name__ == '__main__':
     parser = PlantUMLParser()
-    states, transitions = parser.parse_uml_file('./tests/data/TestFSM.txt')
+    states, transitions = parser.parse_uml_file('/home/redra/Projects/FSMTools/tests/simple_fsm/FSM.txt')
     for state in states:
         print("=================")
         print("State name is " + state.name)

@@ -1,0 +1,25 @@
+{
+  "actions": {
+    "external": "FSMActions.hpp",
+    "internal" : {
+      "Action" : [
+        "(int i, int k) {",
+        "int l = are;",
+        "}"
+      ],
+      "Action1" : "./actions/Action1.scratch.cpp"
+    }
+  },
+  "attributes": {
+    "name": "String",
+    "default_name": "String",
+    "age": "Int",
+    "manual": {
+      "voltage": "Double",
+      "manual2": {
+        "voltage": "Double"
+      }
+    },
+    "ref": "./attributes/ReferenceAttribute.json"
+  }
+}

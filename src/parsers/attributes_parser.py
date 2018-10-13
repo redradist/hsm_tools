@@ -51,6 +51,9 @@ class AttributeParser:
     def __init__(self, extern_attribs=set()):
         self.extern_attribs = copy.deepcopy(extern_attribs)
 
+    def is_nested_type(self, type):
+        return re.match(r'.+.(json|yaml)$', type)
+
     def is_valid_type(self, type):
         return type in AttributeParser.__valid_types or \
                type in self.extern_attribs
@@ -74,29 +77,33 @@ class AttributeParser:
             else:
                 return type
 
-    def _parse_objects(self, objs, owner=None):
+    def _parse_objects(self, objs, owner=None, path=None):
         attributes = []
         for key, value in objs.items():
             if type(value) == str:
                 att = Attribute(key, object=owner)
-                if not self.is_valid_type(value):
-                    raise ValueError('Invalid type. Type should be one of these: ' + str(__valid_types))
-                att.attr_type = self._convert_unified(value)
+                if self.is_nested_type(value):
+                    if not path:
+                        raise ValueError('Unknown current path !!')
+                    full_file_path = os.path.abspath(path) + '/' + value
+                    with open(full_file_path, 'r') as f:
+                        text = f.read()
+                        objects = json.loads(text)
+                        nested_attributes = self._parse_objects(objects, path=path)
+                        att.args = nested_attributes
+                elif self.is_valid_type(value):
+                    att.attr_type = self._convert_unified(value)
+                else:
+                    raise ValueError('Invalid type. Type should be one of these: ' + str(AttributeParser.__valid_types))
                 attributes.append(att)
             elif type(value) == dict:
-                atts = self._parse_objects(value, key)
+                atts = self._parse_objects(value, key, path=path)
                 att = Attribute(key, object=owner)
                 att.attr_type = None
                 if hasattr(att, 'args'):
                     att.args = []
                 att.args.extend(atts)
                 attributes.append(att)
-        return attributes
-
-    def parse_json(self, text):
-        attributes = []
-        objs = json.loads(text)
-        attributes.extend(self._parse_objects(objs))
         return attributes
 
     def parse_yaml(self, text):
@@ -106,17 +113,15 @@ class AttributeParser:
     def find_all_attribute_files(path):
         attrib_files = []
         state_attrib_files = []
+        state_config_files = dict()
         for f in os.listdir(path):
             full_file_path = os.path.abspath(path) + '/' + f
-            match0 = re.match(r'^(?P<attributes_name>[a-zA-Z0-9]+)Attributes.(json|yaml)$', f)
-            match1 = re.match(r'^(?P<state_name>\w+)_Attributes.(json|yaml)$', f)
-            if match0:
-                attributes_name = match0.group("attributes_name")
-                attrib_files.append((attributes_name, full_file_path))
-            elif match1:
+            match0 = re.match(r'^(?P<state_name>\w+)_attributes.(json|yaml)$', f)
+            match1 = re.match(r'^(?P<state_name>\w+).(json|yaml)$', f)
+            if match0 or match1:
                 state_name = match1.group("state_name")
                 state_attrib_files.append((state_name, full_file_path))
-        return attrib_files, state_attrib_files
+        return attrib_files, state_attrib_files, state_config_files
 
     def parse_file(self, attribute_file):
         if type(attribute_file) == str:
@@ -142,6 +147,26 @@ class AttributeParser:
         elif isinstance(fl, io.IOBase):
             text = fl.readlines()
             return self.parse_json(text)
+
+    def find_all_attribute_for(self, path, state_name):
+        attributes = []
+        for f in os.listdir(path):
+            full_file_path = os.path.abspath(path) + '/' + f
+            match_state_json = re.match(r'^' + state_name + r'.(json|yaml)$', f)
+            match_state_attributes_json = re.match(r'^' + state_name + r'.attributes.(json|yaml)$', f)
+            if match_state_json:
+                with open(full_file_path, 'r') as f:
+                    text = f.read()
+                    objects = json.loads(text)
+                    if 'attributes' in objects:
+                        attributes = self._parse_objects(objects['attributes'], path=path)
+                        break
+            elif match_state_attributes_json:
+                with open(full_file_path, 'r') as f:
+                    text = f.read()
+                    objects = json.loads(text)
+                    attributes.extend(self._parse_objects(objects, path=path))
+        return attributes
 
 
 if __name__ == '__main__':

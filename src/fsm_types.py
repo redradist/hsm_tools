@@ -48,6 +48,7 @@ class State:
         self.sub_states = set()
         self.transitions = set()
         self.attributes = set()
+        self.actions = set()
         if parent_state is not None and name == '[*]':
             self.name = parent_state.name
             self.parent_state = parent_state.parent_state
@@ -256,6 +257,7 @@ class Function:
         self.args = args
         self.return_value = return_value
         self.body = body
+        self.lang = None
 
     def __str__(self):
         result = ''
@@ -312,6 +314,14 @@ class Operator:
 
     def __str__(self):
         return str(self.name)
+
+
+class Type:
+    def __init__(self, type):
+        self.type = type
+
+    def __str__(self):
+        return str(self.type)
 
 
 class Value:

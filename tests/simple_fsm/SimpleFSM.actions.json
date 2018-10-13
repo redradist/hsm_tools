@@ -1,0 +1,11 @@
+{
+  "external": "FSMActions.hpp",
+  "internal" : {
+    "Action" : [
+      "(int i, int k) {",
+      "int l = are;",
+      "}"
+    ],
+    "Action1" : "() { return true; }"
+  }
+}

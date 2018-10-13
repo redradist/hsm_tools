@@ -8,5 +8,5 @@
       "voltage": "Double"
     }
   },
-  "ref": "Reference"
+  "reference": "./attributes/ReferenceAttribute.json"
 }

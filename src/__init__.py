@@ -1,1 +1,1 @@
-name = "FSMTools"
+name = "fsm_tools"

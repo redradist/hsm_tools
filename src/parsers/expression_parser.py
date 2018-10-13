@@ -328,6 +328,11 @@ class ExpressionParser:
 
 
 if __name__ == '__main__':
+    example = "Action2(int k)"
+    parser = ExpressionParser(example)
+    condition = parser.parse()
+    print(condition)
+
     example = 'k == isAction(arg0, arg1) -> bool { arg0 = arg1; return arg0; }'
     parser = ExpressionParser(example)
     condition = parser.parse()

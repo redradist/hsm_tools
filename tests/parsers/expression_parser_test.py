@@ -1,7 +1,7 @@
 import unittest
 
 from src.exceptions import ValidationError
-from src.fsm_types import Function, Value, Attribute, Group, Operator, String, Indexer, Expression, Object
+from src.fsm_types import Function, Value, Attribute, Group, Operator, String, Indexer, Expression, Object, Type
 from src.parsers.expression_parser import ExpressionParser
 
 
@@ -13,6 +13,17 @@ class TestingExpressionParser(unittest.TestCase):
     def tearDown(self):
         """Currently nothing to do. Use it for reinitialization data after test"""
         pass
+
+    def test__ActionDefinitionArgType__Valid(self):
+        example = "Action2(int k)"
+        parser = ExpressionParser(example)
+        expression = parser.parse()
+        self.assertEqual(type(expression), Function)
+        self.assertEqual(len(expression.args), 2)
+        self.assertEqual(type(expression.args[0]), Type)
+        self.assertEqual(expression.args[0].type, 'int')
+        self.assertEqual(type(expression.args[1]), Type)
+        self.assertEqual(expression.args[1].type, 'int')
 
     def test__ActionArgValue__Valid(self):
         example = "Action2(2)"

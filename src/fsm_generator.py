@@ -2,11 +2,13 @@
 
 import argparse
 import datetime
+import json
 import re
 import traceback
 
 from jinja2 import Template, Environment
 
+from src.fsm_builder import FSMBuilder
 from src.parsers.attributes_parser import AttributeParser
 from src.parsers.plantuml_parser import PlantUMLParser
 
@@ -84,20 +86,6 @@ def generate_state_wrapper(fsm_name, state, extern_attribs, state_templates, att
         generate_state_wrapper(fsm_name, sub_state, extern_attribs, state_templates, attribute_template, action_templates, dir_to_save)
 
 
-def _index_each_states(states, index):
-    for state in states:
-        state.index = index
-        index += 1
-        if state.sub_states:
-            _index_each_states(state.sub_states, 0)
-
-
-def _index_each_transitions(transitions, index):
-    for transition in transitions:
-        transition.index = index
-        index += 1
-
-
 def generate_fsm_wrappers(uml_diagram, dir_to_save, state_templates=[], attribute_templates=[], action_templates=[]):
     if len(state_templates) != 2:
         raise ValueError("Size of state_templates argument should be 2 : CommonAPI Client and CommonAPI Service")
@@ -113,39 +101,23 @@ def generate_fsm_wrappers(uml_diagram, dir_to_save, state_templates=[], attribut
     elif dir_to_save[len(dir_to_save) - 1] != '/':
         dir_to_save += '/'
 
-    uml_parser = PlantUMLParser()
-    states, transitions = uml_parser.parse_uml_file(uml_diagram)
-    fsm_name = os.path.splitext(os.path.basename(uml_diagram))[0]
+    builder = FSMBuilder()
+    fsm = builder.build_from(uml_diagram)
 
-    if len(states) == 0:
-        raise ValueError("Size of states is zero. No work to do man !?")
-
-    if len(transitions) == 0:
-        raise ValueError("Size of transitions is zero. No work to do man !?")
-
-    _index_each_states(states, 0)
-    _index_each_transitions(transitions, 0)
-    attribute_files, state_attribute_files = AttributeParser.find_all_attribute_files(os.path.dirname(uml_diagram))
-    external_attributes = { attrib_name for attrib_name, _ in attribute_files }
-    attribute_parser = AttributeParser(external_attributes)
-    for state in states:
-        for state_name, attribute_file_name in state_attribute_files:
-            if state.name == state_name:
-                state.attributes = attribute_parser.parse_file(attribute_file_name)
-
-    for state in states:
-        generate_state_wrapper(fsm_name, state, external_attributes, state_templates, attribute_templates[1], action_templates[2:], dir_to_save)
-
-    for attribute in attribute_files:
-        attribute_parser = AttributeParser(external_attributes)
-        attributes = attribute_parser.parse_file(attribute[1])
-        generate_attributes_wrapper(fsm_name, attribute[0], attributes, attribute_templates[0], dir_to_save)
-
-    actions = []
-    for attribute in attribute_files:
-        attribute_parser = AttributeParser(external_attributes)
-        attributes = attribute_parser.parse_file(attribute[1])
-        generate_actions_wrapper(fsm_name, actions, action_templates[:2], dir_to_save)
+    # for state in states:
+    #     generate_state_wrapper(fsm_name, state, external_attributes, state_templates, attribute_templates[1], action_templates[2:], dir_to_save)
+    #
+    # for attribute in attribute_files:
+    #     attribute_parser = AttributeParser(external_attributes)
+    #     attributes = attribute_parser.parse_file(attribute[1])
+    #     generate_attributes_wrapper(fsm_name, attribute[0], attributes, attribute_templates[0], dir_to_save)
+    #
+    # actions = []
+    # for attribute in attribute_files:
+    #     attribute_parser = AttributeParser(external_attributes)
+    #     attributes = attribute_parser.parse_file(attribute[1])
+    #     generate_actions_wrapper(fsm_name, actions, action_templates[:2], dir_to_save)
+    #
 
 
 if __name__ == '__main__':
