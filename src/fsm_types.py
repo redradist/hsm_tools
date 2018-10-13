@@ -44,20 +44,47 @@ class State:
     """
     states = dict()
 
+    @staticmethod
+    def create_state(name, parent_state=None, comment=None):
+        state_name = State.get_state_name(name, parent_state)
+        if state_name in State.states:
+            return State.states[state_name]
+        else:
+            parent_state = State.get_parent_state(name, parent_state)
+            comment = State.get_state_comment_name(name, parent_state, comment)
+            new_state = State(state_name, parent_state, comment)
+            State.states[state_name] = new_state
+            return new_state
+
+    @staticmethod
+    def get_state_name(name, parent_state=None):
+        if parent_state is not None and name == '[*]':
+            return parent_state.name
+        else:
+            return name
+
+    @staticmethod
+    def get_parent_state(name, parent_state=None):
+        if parent_state is not None and name == '[*]':
+            return parent_state.parent_state
+        else:
+            return parent_state
+
+    @staticmethod
+    def get_state_comment_name(name, parent_state=None, comment=None):
+        if parent_state is not None and name == '[*]':
+            return parent_state.comment
+        else:
+            return comment
+
     def __init__(self, name, parent_state=None, comment=None):
         self.sub_states = set()
         self.transitions = set()
         self.attributes = set()
         self.actions = set()
-        if parent_state is not None and name == '[*]':
-            self.name = parent_state.name
-            self.parent_state = parent_state.parent_state
-            self.comment = parent_state.comment
-        else:
-            self.name = name
-            self.parent_state = parent_state
-            self.comment = comment
-            State.states[str(self)] = self
+        self.name = name
+        self.parent_state = parent_state
+        self.comment = comment
         if parent_state is not None:
             parent_state.sub_states.add(self)
 

@@ -105,7 +105,7 @@ class PlantUMLParser:
                 actions = self._parse_actions(raw_actions)
                 condition = self._parse_condition(raw_condition)
             if from_state_name != '[*]':
-                from_state = State(from_state_name, parent_state)
+                from_state = State.create_state(from_state_name, parent_state)
                 for state in states:
                     if from_state == state:
                         state.sub_states.update(from_state.sub_states)
@@ -116,7 +116,7 @@ class PlantUMLParser:
             else:
                 from_state = parent_state
             if to_state_name != '[*]':
-                to_state = State(to_state_name, parent_state)
+                to_state = State.create_state(to_state_name, parent_state)
                 for state in states:
                     if to_state == state:
                         state.sub_states.update(to_state.sub_states)
@@ -146,7 +146,7 @@ class PlantUMLParser:
         for nested_state in nested_state_meta:
             state_name = nested_state.group('name')
             state_comment = nested_state.group('comment')
-            new_state = State(state_name, parent_state, state_comment)
+            new_state = State.create_state(state_name, parent_state, state_comment)
             body = nested_state.group('body')
             new_states, new_transitions = self._parse_instructions(body, new_state)
             for state in states:
@@ -176,7 +176,7 @@ class PlantUMLParser:
             instructions = file.read()
             state_machine_name = os.path.basename(file_name)
             state_machine_name = state_machine_name.split('.')[0]
-            root = State(state_machine_name)
+            root = State.create_state(state_machine_name)
             states, transitions = self._parse_instructions(instructions, root)
             self._tie_transitions_to_states(transitions, root)
             return states, transitions

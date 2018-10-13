@@ -7,7 +7,7 @@ from src.parsers.expression_parser import ExpressionParser
 
 
 class ActionParser:
-    scratch_file_pattern = re.compile(r'.+\.scratch\.(?P<lang>.+)')
+    scratch_file_pattern = re.compile(r'.+?(?P<action_name>[^/]+)\.scratch\.(?P<lang>.+)')
     import_module_pattern = re.compile(r'#include\s*.+')
 
     def is_nested_type(self, type):
@@ -68,6 +68,7 @@ class ActionParser:
                     action_body = action_body.strip()
             expression_parser = ExpressionParser(action_body)
             function = expression_parser.parse()
+            function.name = action_name
             if type(function) != Function:
                 raise ValueError(f'Type of function[{function}] should be Function !!')
             if lang:

@@ -15,7 +15,7 @@ from src.parsers.plantuml_parser import PlantUMLParser
 jinja2_do_ext = Environment(extensions=['jinja2.ext.do'])
 
 
-def generate_state_attributes_wrapper(fsm_name, state, template_file, dir_to_save):
+def generate_state_attributes_wrapper(state, template_file, dir_to_save):
     current_datetime = datetime.datetime.now()
     current_date = current_datetime.strftime("%d %b %Y")
 
@@ -25,8 +25,7 @@ def generate_state_attributes_wrapper(fsm_name, state, template_file, dir_to_sav
         template = jinja2_do_ext.from_string(lines)
         if not os.path.exists(dir_to_save):
             os.mkdir(dir_to_save)
-        files_output = template.render(fsm_name=fsm_name,
-                                       state_name=state.name,
+        files_output = template.render(state_name=state.name,
                                        attributes=state.attributes,
                                        date=current_date)
         file_name_to_save = dir_to_save + state.name + "_Attributes.hpp"
@@ -34,7 +33,7 @@ def generate_state_attributes_wrapper(fsm_name, state, template_file, dir_to_sav
             file_to_save.write(files_output)
 
 
-def generate_attributes_wrapper(fsm_name, struct_name, attributes, attribute_template, dir_to_save):
+def generate_attributes_wrapper(struct_name, attributes, attribute_template, dir_to_save):
     current_datetime = datetime.datetime.now()
     current_date = current_datetime.strftime("%d %b %Y")
 
@@ -44,8 +43,7 @@ def generate_attributes_wrapper(fsm_name, struct_name, attributes, attribute_tem
         template = jinja2_do_ext.from_string(lines)
         if not os.path.exists(dir_to_save):
             os.mkdir(dir_to_save)
-        files_output = template.render(fsm_name=fsm_name,
-                                       struct_name=struct_name,
+        files_output = template.render(struct_name=struct_name,
                                        attributes=attributes,
                                        date=current_date)
         file_name_to_save = dir_to_save + struct_name + "Attributes.hpp"
@@ -57,7 +55,7 @@ def generate_actions_wrapper(fsm_name, actions, action_templates,  dir_to_save):
     pass
 
 
-def generate_state_wrapper(fsm_name, state, extern_attribs, state_templates, attribute_template, action_templates, dir_to_save):
+def generate_state_wrapper(state, state_templates, attribute_template, action_templates, dir_to_save):
     current_datetime = datetime.datetime.now()
     current_date = current_datetime.strftime("%d %b %Y")
 
@@ -74,16 +72,15 @@ def generate_state_wrapper(fsm_name, state, extern_attribs, state_templates, att
                 file_extension = __file_extension.search(template_file_name).group(1)
                 if not os.path.exists(dir_to_save):
                     os.mkdir(dir_to_save)
-                files_output = template.render(fsm_name=fsm_name,
-                                               state=state,
+                files_output = template.render(state=state,
                                                date=current_date)
                 with open(dir_to_save + wrapper_name + "_State." + file_extension, mode='w') as file_to_save:
                     file_to_save.write(files_output)
                 if state.attributes:
-                    generate_state_attributes_wrapper(fsm_name, state, attribute_template, dir_to_save)
+                    generate_state_attributes_wrapper(state, attribute_template, dir_to_save)
         index += 1
     for sub_state in state.sub_states:
-        generate_state_wrapper(fsm_name, sub_state, extern_attribs, state_templates, attribute_template, action_templates, dir_to_save)
+        generate_state_wrapper(sub_state, state_templates, attribute_template, action_templates, dir_to_save)
 
 
 def generate_fsm_wrappers(uml_diagram, dir_to_save, state_templates=[], attribute_templates=[], action_templates=[]):
@@ -104,9 +101,8 @@ def generate_fsm_wrappers(uml_diagram, dir_to_save, state_templates=[], attribut
     builder = FSMBuilder()
     fsm = builder.build_from(uml_diagram)
 
-    # for state in states:
-    #     generate_state_wrapper(fsm_name, state, external_attributes, state_templates, attribute_templates[1], action_templates[2:], dir_to_save)
-    #
+    generate_state_wrapper(fsm, state_templates, attribute_templates[1], action_templates[2:], dir_to_save)
+
     # for attribute in attribute_files:
     #     attribute_parser = AttributeParser(external_attributes)
     #     attributes = attribute_parser.parse_file(attribute[1])
