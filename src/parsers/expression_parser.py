@@ -1,4 +1,5 @@
-from src.fsm_types import Value, Attribute, Operator, Indexer, Group, String, Function, Object, Expression
+from src.fsm_types import Value, Attribute, Operator, Indexer, Group, String, Object, Expression, Lambda, \
+    FunctionCall, Function
 from src.exceptions import ValidationError
 
 
@@ -7,6 +8,18 @@ class ExpressionParser:
         self._statement = statement
         self._expressions = Expression()
         self._subexpressions = Expression()
+        self.contexts = []
+        self.temp = []
+        self.num_of_open_braces = 0
+        self.num_of_open_parentheses = 0
+        self.num_of_open_square_bracket = 0
+        self.num_char = 0
+        for ch in self._statement:
+            self.num_char += 1
+            self._parse_expression(ch)
+
+        # NOTE(redrad): Currently workaround to finish parsing statement
+        self._parse_expression(' ')
 
     _operators = [ '=', '==', '===', '!=', '!==',
                    '>', '>=', '<', '<=', '&', '&&',
@@ -14,6 +27,9 @@ class ExpressionParser:
                    '!', '~', '+', '++', '-', '--',
                    '+=', '-=', '|=', '&=', '/', '//',
                    '->']
+
+    def get_ast(self):
+        return self.expressions
 
     def is_name(self, value):
         return not value[0].isdigit()
@@ -80,13 +96,15 @@ class ExpressionParser:
             self.temp.append(ch)
         elif self.is_operator(''.join(self.temp)):
             if self.temp[0] == '-' and self.temp[1] == '>':
-                if len(self._expressions) > 0 and type(self._expressions[-1]) == Function:
+                if len(self._expressions) > 0 and isinstance(self._expressions[-1], FunctionCall):
                     if self.is_name_letter(ch) or ch == ' ':
                         if not hasattr(self, 'return_value'):
                             self.return_value = ''
                         self.return_value += ch
                     else:
                         func = self._expressions[-1]
+                        func = Function(func.name, func.object, *func.args)
+                        self._expressions[-1] = func
                         return_value = self.return_value.strip()
                         if ' ' in return_value:
                             raise ValidationError()
@@ -100,10 +118,9 @@ class ExpressionParser:
                             self.return_value = ''
                         self.return_value += ch
                     else:
-                        args = self._expressions[-1]
-                        anon_func = Function(None)
-                        anon_func.args = args
-                        anon_func.body = ''.join(self.temp)
+                        group = self._expressions[-1]
+                        body = ''.join(self.temp)
+                        anon_func = Lambda(*group._items, body=body)
                         return_value = self.return_value.strip()
                         if ' ' in return_value:
                             raise ValidationError()
@@ -132,18 +149,18 @@ class ExpressionParser:
                 del self.temp[-1]
                 indexer = self._expressions[-1]
                 parser = ExpressionParser(''.join(self.temp))
-                indexer.expression = parser.parse()
+                indexer.expression = parser.get_ast()
                 if not indexer.expression:
                     raise ValidationError()
                 self.temp = []
 
-    def parse_function(self, ch):
+    def parse_function_call(self, ch):
         self.temp.append(ch)
         if ch == ')':
             del self.temp[0]
             del self.temp[-1]
             parser = ExpressionParser(''.join(self.temp))
-            expression = parser.parse()
+            expression = parser.get_ast()
             self._expressions[-1].args = list(expression) if isinstance(expression, Expression) else [expression]
             self.temp = []
 
@@ -157,32 +174,36 @@ class ExpressionParser:
                 del self.temp[0]
                 del self.temp[-1]
                 parser = ExpressionParser(''.join(self.temp))
-                expression = parser.parse()
+                expression = parser.get_ast()
                 self._expressions.append(Group(expression))
                 self.temp = []
 
-    def parse_function_body(self, ch):
+    def parse_function(self, ch):
         self.temp.append(ch)
         if ch == '{':
-            self.num_of_open_perentesis += 1
+            self.num_of_open_parentheses += 1
         elif ch == '}':
-            self.num_of_open_perentesis -= 1
-            if self.num_of_open_perentesis == 0:
+            self.num_of_open_parentheses -= 1
+            if self.num_of_open_parentheses == 0:
                 del self.temp[0]
                 del self.temp[-1]
-                if len(self._expressions) > 0 and type(self._expressions[-1]) == Function:
+                if len(self._expressions) > 0 and isinstance(self._expressions[-1], Function):
                     func = self._expressions[-1]
                     func.body = ''.join(self.temp)
+                elif len(self._expressions) > 0 and isinstance(self._expressions[-1], FunctionCall):
+                    func = self._expressions[-1]
+                    func = Function(func.name, func.object, *func.args)
+                    self._expressions[-1] = func
+                    func.body = ''.join(self.temp)
                 elif len(self._expressions) > 0 and type(self._expressions[-1]) == Group:
-                    args = self._expressions[-1]
-                    anon_func = Function(None)
-                    anon_func.args = args
-                    anon_func.body = ''.join(self.temp)
+                    group = self._expressions[-1]
+                    body = ''.join(self.temp)
+                    anon_func = Lambda(*group._items, body=body)
                     self._expressions[-1] = anon_func
                 elif len(self._expressions) > 0 and type(self._expressions[-1]) == Attribute:
                     attrib = self._expressions[-1]
                     parser = ExpressionParser(''.join(self.temp))
-                    expression = parser.parse()
+                    expression = parser.get_ast()
                     attrib.args = list(expression) if isinstance(expression, Expression) else [expression]
                 else:
                     raise ValidationError()
@@ -211,9 +232,9 @@ class ExpressionParser:
         'Number': parse_number,
         'Operator': parse_operator,
         'Indexer': parse_indexer,
-        'Function': parse_function,
+        'FunctionCall': parse_function_call,
         'Group': parse_group,
-        'FunctionBody': parse_function_body,
+        'Function': parse_function,
         'Object': parse_object,
     }
 
@@ -245,14 +266,14 @@ class ExpressionParser:
         elif len(self._expressions) > 0 and \
             type(self._expressions[-1]) == Attribute and \
             self.is_group_operator(ch):
-            contexts[-1] = 'Function'
+            contexts[-1] = 'FunctionCall'
             if len(self._expressions) > 0 and type(self._expressions[-1]) == Attribute:
                 attr = self._expressions[-1]
-                func = Function(attr.name)
+                func = FunctionCall(attr.name)
                 func.object = attr.object
                 self._expressions[-1] = func
         elif self.is_function_body_operator(ch):
-            contexts.append('FunctionBody')
+            contexts.append('Function')
         elif self.is_group_operator(ch):
             contexts.append('Group')
         elif self.is_string_operator(ch):
@@ -311,59 +332,49 @@ class ExpressionParser:
                                       self._expressions)
             return self._expressions if len(self._expressions) != 1 else self._expressions[0]
 
-    def parse(self):
-        self.contexts = []
-        self.temp = []
-        self.num_of_open_braces = 0
-        self.num_of_open_perentesis = 0
-        self.num_of_open_square_bracket = 0
-        self.num_char = 0
-        for ch in self._statement:
-            self.num_char += 1
-            self._parse_expression(ch)
-
-        # NOTE(redrad): Currently workaround to finish parsing statement
-        self._parse_expression(' ')
-        return self.expressions
-
 
 if __name__ == '__main__':
     example = "Action2(int k)"
     parser = ExpressionParser(example)
-    condition = parser.parse()
+    condition = parser.get_ast()
     print(condition)
 
     example = 'k == isAction(arg0, arg1) -> bool { arg0 = arg1; return arg0; }'
     parser = ExpressionParser(example)
-    condition = parser.parse()
+    condition = parser.get_ast()
+    print(condition)
+
+    example = 'k == (arg0, arg1) -> bool { arg0 = arg1; return arg0; }'
+    parser = ExpressionParser(example)
+    condition = parser.get_ast()
     print(condition)
 
     example = 'MyNameSpace::isAction(arg0 == 1, arg1) == k'
     parser = ExpressionParser(example)
-    condition = parser.parse()
+    condition = parser.get_ast()
     print(condition)
 
     example = 'MyNameSpace::isAction(arg0, arg1) == k'
     parser = ExpressionParser(example)
-    condition = parser.parse()
+    condition = parser.get_ast()
     print(condition)
 
     example = 'name.isAction(arg0, arg1) == k'
     parser = ExpressionParser(example)
-    condition = parser.parse()
+    condition = parser.get_ast()
     print(condition)
 
     example = 'k == isAction(arg0, arg1) { arg0 = arg1; }'
     parser = ExpressionParser(example)
-    condition = parser.parse()
+    condition = parser.get_ast()
     print(condition)
 
     example = 'k > 0 && isAction(arg0, arg1)'
     parser = ExpressionParser(example)
-    condition = parser.parse()
+    condition = parser.get_ast()
     print(condition)
 
     example = 'k[1] > 0 || isAction()'
     parser = ExpressionParser(example)
-    condition = parser.parse()
+    condition = parser.get_ast()
     print(condition)
