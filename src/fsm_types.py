@@ -150,11 +150,11 @@ class Transition:
     Object that responsible for storing transition information:
         From State, To State, Event, Action, Condition
     """
-    def __init__(self, from_state, to_state, event=None, action=None, condition=None):
+    def __init__(self, from_state, to_state, event=None, call_actions=None, condition=None):
         self.from_state = from_state
         self.to_state = to_state
         self.event = event
-        self.action = action
+        self.call_actions = call_actions
         self.condition = condition
 
     def __eq__(self, other):
@@ -162,7 +162,7 @@ class Transition:
                self.from_state == other.from_state and \
                self.to_state == other.to_state and \
                self.event == other.event and \
-               self.action == other.action and \
+               self.call_actions == other.call_action and \
                self.condition == other.condition
 
     def __ne__(self, other):
@@ -172,7 +172,7 @@ class Transition:
         return hash(self.from_state) ^ \
                hash(self.to_state) ^ \
                hash(not self.event or tuple(self.event)) ^ \
-               hash(not self.action or tuple(self.action)) ^ \
+               hash(not self.call_actions or tuple(self.call_actions)) ^ \
                hash(not self.condition or tuple(self.condition))
 
 
@@ -278,13 +278,55 @@ class Object:
 
 
 class Function:
-    def __init__(self, name, object=None, *args, body=None, return_value=None):
+    def __init__(self, name, object=None, *params, body=None, return_value=None):
         self.object = object
         self.name = name
-        self.args = args
+        self.params = params
         self.return_value = return_value
         self.body = body
         self.lang = None
+
+    def __str__(self):
+        result = ''
+        if self.object:
+            result += str(self.object) + '.'
+        result += str(self.name)
+        result += '('
+        params_str = ''
+        for param in self.params:
+            if len(params_str) != 0:
+                params_str += ', '
+                params_str += str(param)
+        result += params_str
+        result += ')'
+        if self.return_value:
+            result += ' -> ' + self.return_value + ' '
+        if self.body:
+            result += '{' + self.body + '}'
+        return result
+
+
+class Lambda(Function):
+    """
+    Object that representing anonymous Function
+    """
+    def __init__(self, *args, body=None, return_value=None):
+        super().__init__(None,
+                         None,
+                         *args,
+                         body=body,
+                         return_value=return_value)
+
+
+class FunctionCall:
+    """
+    Object that responsible for storing event information:
+        State owner
+    """
+    def __init__(self, name, object=None, *args):
+        self.object = object
+        self.name = name
+        self.args = args
 
     def __str__(self):
         result = ''
@@ -299,26 +341,7 @@ class Function:
             arg_str += str(arg)
         result += arg_str
         result += ')'
-        if self.return_value:
-            result += ' -> ' + self.return_value + ' '
-        if self.body:
-            result += '{' + self.body + '}'
         return result
-
-
-class Action(Function):
-    """
-    Object that responsible for storing event information:
-        State owner
-    """
-    def __init__(self, function):
-        if not isinstance(function, Function):
-            raise TypeError('function is not Function type')
-        super().__init__(function.name,
-                         function.object,
-                         *function.args,
-                         body=function.body,
-                         return_value=function.return_value)
 
 
 class String:
