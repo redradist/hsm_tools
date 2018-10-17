@@ -1,7 +1,7 @@
 from src.exceptions import ValidationError
 
 
-class StatementParser:
+class TransitionParser:
     def __init__(self, statement):
         self._create_temporary_objects()
 
@@ -138,7 +138,7 @@ class StatementParser:
 
 if __name__ == '__main__':
     example = 'EvConfig1() / Action() { [] }, Action2() [ i > k ]]'
-    parser = StatementParser(example)
+    parser = TransitionParser(example)
     events, actions, condition = parser.parse()
     print(events)
     print(actions)
