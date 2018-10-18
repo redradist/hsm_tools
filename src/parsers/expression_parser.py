@@ -7,7 +7,6 @@ class ExpressionParser:
     def __init__(self, statement):
         self._statement = statement
         self._expressions = Expression()
-        self._subexpressions = Expression()
         self.contexts = []
         self.temp = []
         self.num_of_open_braces = 0
@@ -20,6 +19,7 @@ class ExpressionParser:
 
         # NOTE(redrad): Currently workaround to finish parsing statement
         self._parse_expression(' ')
+        self._expressions = self.get_most_inner_expression(self._expressions)
 
     _operators = [ '=', '==', '===', '!=', '!==',
                    '>', '>=', '<', '<=', '&', '&&',
@@ -66,7 +66,10 @@ class ExpressionParser:
         if self.is_name_letter(ch):
             self.temp.append(ch)
         elif len(self.temp) > 0:
-            attrib = self._expressions[-1]
+            if type(self._expressions[-1]) == Expression:
+                attrib = self._expressions[-1][-1]
+            else:
+                attrib = self._expressions[-1]
             attrib.name = ''.join(self.temp)
             self.temp = []
             self._parse_expression(ch)
@@ -112,7 +115,7 @@ class ExpressionParser:
                             func.return_value = return_value
                         self.temp = []
                         self._parse_expression(ch)
-                elif len(self._expressions) > 0 and type(self._expressions[-1]) == Group:
+                elif len(self._expressions) > 0 and type(self._expressions[-1]) == Expression:
                     if self.is_name_letter(ch) or ch == ' ':
                         if not hasattr(self, 'return_value'):
                             self.return_value = ''
@@ -154,6 +157,15 @@ class ExpressionParser:
                     raise ValidationError()
                 self.temp = []
 
+    def unwrap_params(self):
+        pass
+
+    def get_most_inner_expression(self, expression):
+        if isinstance(expression, Expression) and len(expression) == 1:
+            return self.get_most_inner_expression(expression[0])
+        else:
+            return expression
+
     def parse_function_call(self, ch):
         self.temp.append(ch)
         if ch == ')':
@@ -161,7 +173,11 @@ class ExpressionParser:
             del self.temp[-1]
             parser = ExpressionParser(''.join(self.temp))
             expression = parser.get_ast()
-            self._expressions[-1].args = list(expression) if isinstance(expression, Expression) else [expression]
+            if isinstance(expression, Expression) or \
+              (isinstance(expression, Expression) and len(expression) == 0):
+                self._expressions[-1].args = list(expression)
+            else:
+                self._expressions[-1].args = [expression]
             self.temp = []
 
     def parse_group(self, ch):
@@ -175,7 +191,7 @@ class ExpressionParser:
                 del self.temp[-1]
                 parser = ExpressionParser(''.join(self.temp))
                 expression = parser.get_ast()
-                self._expressions.append(Group(expression))
+                self._expressions.append(expression)
                 self.temp = []
 
     def parse_function(self, ch):
@@ -195,7 +211,7 @@ class ExpressionParser:
                     func = Function(func.name, func.object, *func.args)
                     self._expressions[-1] = func
                     func.body = ''.join(self.temp)
-                elif len(self._expressions) > 0 and type(self._expressions[-1]) == Group:
+                elif len(self._expressions) > 0 and type(self._expressions[-1]) == Expression:
                     group = self._expressions[-1]
                     body = ''.join(self.temp)
                     anon_func = Lambda(*group._items, body=body)
@@ -241,15 +257,19 @@ class ExpressionParser:
     def _context_analyzer(self, ch, contexts):
         if ch == ',':
             contexts.append('Comma')
-            self._subexpressions.append(self._expressions)
-            self._expressions = Expression()
+            if len(self._expressions) > 1:
+                self._expressions = Expression(self._expressions)
+            self._expressions = Expression(self._expressions)
         elif self.is_first_name_letter(ch):
             contexts.append('Text')
             if len(self._expressions) == 0 or \
                 type(self._expressions[-1]) != Attribute or \
                 self._expressions[-1].object == None or \
                 self._expressions[-1].name != None:
-                self._expressions.append(Attribute(None))
+                if len(self._expressions) > 0 and type(self._expressions[-1]) == Expression:
+                    self._expressions[-1].append(Attribute(None))
+                else:
+                    self._expressions.append(Attribute(None))
         elif ch.isdigit():
             contexts.append('Number')
         elif self.is_operator_char(ch):
@@ -270,8 +290,8 @@ class ExpressionParser:
             if len(self._expressions) > 0 and type(self._expressions[-1]) == Attribute:
                 attr = self._expressions[-1]
                 func = FunctionCall(attr.name)
-                func.object = attr.object
                 self._expressions[-1] = func
+                func.object = attr.object
         elif self.is_function_body_operator(ch):
             contexts.append('Function')
         elif self.is_group_operator(ch):
@@ -320,17 +340,7 @@ class ExpressionParser:
 
     @property
     def expressions(self):
-        if len(self._subexpressions) > 0:
-            if len(self._expressions) > 0:
-                self._subexpressions.append(self._expressions)
-                self._expressions = Expression()
-            self._simplify_expression(lambda obj: setattr(self, '_subexpressions', obj),
-                                      self._subexpressions)
-            return self._subexpressions if len(self._subexpressions) != 1 else self._subexpressions[0]
-        else:
-            self._simplify_expression(lambda obj: setattr(self, '_expression', obj),
-                                      self._expressions)
-            return self._expressions if len(self._expressions) != 1 else self._expressions[0]
+        return self._expressions
 
 
 if __name__ == '__main__':

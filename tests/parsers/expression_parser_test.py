@@ -15,6 +15,17 @@ class TestingExpressionParser(unittest.TestCase):
         """Currently nothing to do. Use it for reinitialization data after test"""
         pass
 
+    # def test__ActionDefinitionArgType__Valid(self):
+    #     example = "Action2(int k)"
+    #     parser = ExpressionParser(example)
+    #     ast = parser.get_ast()
+    #     self.assertEqual(type(ast), FunctionCall)
+    #     self.assertEqual(len(ast.args), 2)
+    #     self.assertEqual(type(ast.args[0]), Attribute)
+    #     self.assertEqual(ast.args[0].type, 'int')
+    #     self.assertEqual(type(ast.args[1]), Attribute)
+    #     self.assertEqual(ast.args[1].type, 'k')
+
     def test__ActionArgValue__Valid(self):
         example = "Action2(2)"
         parser = ExpressionParser(example)
@@ -46,7 +57,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = "(++k && l)"
         parser = ExpressionParser(example)
         ast = parser.get_ast()
-        self.assertEqual(type(ast), Group)
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 4)
         self.assertEqual(type(ast[0]), Operator)
         self.assertEqual(ast[0].name, '++')
@@ -61,18 +72,16 @@ class TestingExpressionParser(unittest.TestCase):
         example = "((++k && l))"
         parser = ExpressionParser(example)
         ast = parser.get_ast()
-        self.assertEqual(type(ast), Group)
-        sub_ast = ast[0]
-        self.assertEqual(type(sub_ast), Group)
-        self.assertEqual(len(sub_ast), 4)
-        self.assertEqual(type(sub_ast[0]), Operator)
-        self.assertEqual(sub_ast[0].name, '++')
-        self.assertEqual(type(sub_ast[1]), Attribute)
-        self.assertEqual(sub_ast[1].name, 'k')
-        self.assertEqual(type(sub_ast[2]), Operator)
-        self.assertEqual(sub_ast[2].name, '&&')
-        self.assertEqual(type(sub_ast[3]), Attribute)
-        self.assertEqual(sub_ast[3].name, 'l')
+        self.assertEqual(type(ast), Expression)
+        self.assertEqual(len(ast), 4)
+        self.assertEqual(type(ast[0]), Operator)
+        self.assertEqual(ast[0].name, '++')
+        self.assertEqual(type(ast[1]), Attribute)
+        self.assertEqual(ast[1].name, 'k')
+        self.assertEqual(type(ast[2]), Operator)
+        self.assertEqual(ast[2].name, '&&')
+        self.assertEqual(type(ast[3]), Attribute)
+        self.assertEqual(ast[3].name, 'l')
 
     def test__Group_of_Group_of_OperatorVariable_AND_Variable__Invalid(self):
         example = "({++k && l})"
