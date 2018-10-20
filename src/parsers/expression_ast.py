@@ -176,7 +176,7 @@ class Transition:
                hash(not self.condition or tuple(self.condition))
 
 
-class Group(Expression):
+class Sequence(Expression):
     def __init__(self, expression):
         Expression.__init__(self)
         if isinstance(expression, Expression):
@@ -185,19 +185,19 @@ class Group(Expression):
             self._items = [expression]
 
     def __str__(self):
-        result = '(' + ', '.join(str(item) for item in self.items) + ')'
+        result = '(' + ', '.join(str(item) for item in self._items) + ')'
         return result
 
 
-class Attribute:
-    def __init__(self, name, object=None, *args):
+class Symbol:
+    def __init__(self, name, object=None, *symbols):
         self.object = object
         self.name = name
-        self.args = args
+        self.symbols = symbols
         self.attr_type = None
 
     def is_complex(self):
-        return self.args is not None and len(self.args) > 0
+        return self.symbols is not None and len(self.symbols) > 0
 
     def get_import_modules_for(self, language):
         if language == 'c' or language == 'C':
@@ -246,28 +246,15 @@ class Attribute:
             result += str(self.object) + '.'
         result += str(self.name)
         result += '{'
-        if self.args:
-            arg_str = ''
-            for arg in self.args:
-                if len(arg_str) != 0:
-                    arg_str += ', '
-                arg_str += str(arg)
-            result += arg_str
+        if self.symbols:
+            symbol_str = ''
+            for symbol in self.symbols:
+                if len(symbol_str) != 0:
+                    symbol_str += ', '
+                    symbol_str += str(symbol)
+            result += symbol_str
         result += '}'
         return result
-
-
-class Event(Attribute):
-    """
-    Object that responsible for storing event information:
-        State owner
-    """
-    def __init__(self, attribute):
-        if not isinstance(attribute, Attribute):
-            raise TypeError('attribute is not Attribute type')
-        super().__init__(attribute.name,
-                         attribute.object,
-                         *attribute.args)
 
 
 class Object:
