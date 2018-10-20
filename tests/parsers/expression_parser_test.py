@@ -1,7 +1,7 @@
 import unittest
 
 from src.exceptions import ValidationError
-from src.fsm_types import Function, Value, Attribute, Group, Operator, String, Indexer, Expression, Object, Type, \
+from src.parsers.expression_ast import Function, Value, Attribute, Operator, String, Indexer, Expression, Object, \
     FunctionCall, Lambda
 from src.parsers.expression_parser import ExpressionParser
 

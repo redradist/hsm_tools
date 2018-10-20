@@ -1,5 +1,5 @@
-from src.fsm_types import Value, Attribute, Operator, Indexer, Group, String, Object, Expression, Lambda, \
-    FunctionCall, Function
+from src.parsers.expression_ast import Value, Attribute, Operator, Indexer, Group, String, Object, Lambda, \
+    FunctionCall, Function, Expression
 from src.exceptions import ValidationError
 
 
