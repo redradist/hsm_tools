@@ -1,10 +1,10 @@
-from src.parsers.expression_ast import Value, Attribute, Operator, Indexer, Group, String, Object, Lambda, \
+from src.parsers.expression_ast import Value, Symbol, Operator, Indexer, Sequence, String, Object, Lambda, \
     FunctionCall, Function, Expression
 from src.exceptions import ValidationError
 
 
 class ExpressionParser:
-    def __init__(self, statement, optimize=True):
+    def __init__(self, statement):
         self._statement = statement
         self._expressions = Expression()
         self.contexts = []
@@ -23,21 +23,7 @@ class ExpressionParser:
         if type(self._expressions) == Expression and \
            len(self._expressions) > 1 and \
            'Comma' in self.contexts:
-            self._expressions = Group(self._expressions)
-            # sub_expression = Expression()
-            # expression = Expression()
-            # for context in self.contexts:
-            #     if len(self._expressions) == 0:
-            #         break
-            #     if context != 'Comma':
-            #         sub_expression.append(self._expressions[0])
-            #         self._expressions.remove(self._expressions[0])
-            #     else:
-            #         expression.append(sub_expression)
-            #         sub_expression = Expression()
-            # if len(sub_expression) > 0:
-            #     expression.append(sub_expression)
-            # self._expressions = expression
+            self._expressions = Sequence(self._expressions)
 
     _operators = [ '=', '==', '===', '!=', '!==',
                    '>', '>=', '<', '<=', '&', '&&',
@@ -189,7 +175,7 @@ class ExpressionParser:
             parser = ExpressionParser(''.join(self.temp))
             expression = parser.get_ast()
             if (type(expression) == Expression and len(expression) <= 1) or \
-               type(expression) == Group:
+               type(expression) == Sequence:
                 self._expressions[-1].args = list(expression)
             else:
                 self._expressions[-1].args = [expression]
@@ -231,7 +217,7 @@ class ExpressionParser:
                     body = ''.join(self.temp)
                     anon_func = Lambda(*group._items, body=body)
                     self._expressions[-1] = anon_func
-                elif len(self._expressions) > 0 and type(self._expressions[-1]) == Attribute:
+                elif len(self._expressions) > 0 and type(self._expressions[-1]) == Symbol:
                     attrib = self._expressions[-1]
                     parser = ExpressionParser(''.join(self.temp))
                     expression = parser.get_ast()
@@ -282,31 +268,31 @@ class ExpressionParser:
         elif self.is_first_name_letter(ch):
             contexts.append('Text')
             if len(self._expressions) == 0 or \
-                type(self._expressions[-1]) != Attribute or \
+                type(self._expressions[-1]) != Symbol or \
                 self._expressions[-1].object == None or \
                 self._expressions[-1].name != None:
                 if len(self._expressions) > 0 and type(self._expressions[-1]) == Expression:
-                    self._expressions[-1].append(Attribute(None))
+                    self._expressions[-1].append(Symbol(None))
                 else:
-                    self._expressions.append(Attribute(None))
+                    self._expressions.append(Symbol(None))
         elif ch.isdigit():
             contexts.append('Number')
         elif self.is_operator_char(ch):
             contexts.append('Operator')
         elif len(self._expressions) > 0 and \
-            type(self._expressions[-1]) == Attribute and \
+            type(self._expressions[-1]) == Symbol and \
             ch == '.':
             contexts.append('Text')
             old_attrib = self._expressions[-1]
             obj = Object(old_attrib.name)
-            attrib = Attribute(None)
+            attrib = Symbol(None)
             attrib.object = obj
             self._expressions[-1] = attrib
         elif len(self._expressions) > 0 and \
-            type(self._expressions[-1]) == Attribute and \
+            type(self._expressions[-1]) == Symbol and \
             self.is_group_operator(ch):
             contexts[-1] = 'FunctionCall'
-            if len(self._expressions) > 0 and type(self._expressions[-1]) == Attribute:
+            if len(self._expressions) > 0 and type(self._expressions[-1]) == Symbol:
                 attr = self._expressions[-1]
                 func = FunctionCall(attr.name)
                 self._expressions[-1] = func
@@ -319,7 +305,7 @@ class ExpressionParser:
             contexts.append('String')
         elif self.is_index_operator(ch):
             contexts.append('Indexer')
-            if len(self._expressions) > 0 and type(self._expressions[-1]) == Attribute:
+            if len(self._expressions) > 0 and type(self._expressions[-1]) == Symbol:
                 attr = self._expressions[-1]
                 self._expressions[-1] = Indexer(attr)
             else:
