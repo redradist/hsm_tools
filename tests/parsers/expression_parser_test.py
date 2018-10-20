@@ -15,16 +15,17 @@ class TestingExpressionParser(unittest.TestCase):
         """Currently nothing to do. Use it for reinitialization data after test"""
         pass
 
-    # def test__ActionDefinitionArgType__Valid(self):
-    #     example = "Action2(int k)"
-    #     parser = ExpressionParser(example)
-    #     ast = parser.get_ast()
-    #     self.assertEqual(type(ast), FunctionCall)
-    #     self.assertEqual(len(ast.args), 2)
-    #     self.assertEqual(type(ast.args[0]), Attribute)
-    #     self.assertEqual(ast.args[0].type, 'int')
-    #     self.assertEqual(type(ast.args[1]), Attribute)
-    #     self.assertEqual(ast.args[1].type, 'k')
+    def test__ActionDefinitionArgType__Valid(self):
+        example = "Action2(int k)"
+        parser = ExpressionParser(example)
+        ast = parser.get_ast()
+        self.assertEqual(type(ast), FunctionCall)
+        self.assertEqual(len(ast.args), 1)
+        self.assertEqual(type(ast.args[0]), Expression)
+        self.assertEqual(type(ast.args[0][0]), Attribute)
+        self.assertEqual(ast.args[0][0].name, 'int')
+        self.assertEqual(type(ast.args[0][1]), Attribute)
+        self.assertEqual(ast.args[0][1].name, 'k')
 
     def test__ActionArgValue__Valid(self):
         example = "Action2(2)"
@@ -47,11 +48,11 @@ class TestingExpressionParser(unittest.TestCase):
     def test__ActionArgAttribute__Valid(self):
         example = "Action2(k)"
         parser = ExpressionParser(example)
-        expression = parser.get_ast()
-        self.assertEqual(type(expression), FunctionCall)
-        self.assertEqual(len(expression.args), 1)
-        self.assertEqual(type(expression.args[0]), Attribute)
-        self.assertEqual(expression.args[0].name, 'k')
+        ast = parser.get_ast()
+        self.assertEqual(type(ast), FunctionCall)
+        self.assertEqual(len(ast.args), 1)
+        self.assertEqual(type(ast.args[0]), Attribute)
+        self.assertEqual(ast.args[0].name, 'k')
 
     def test__Group_of_OperatorVariable_AND_Variable__Valid(self):
         example = "(++k && l)"
@@ -92,6 +93,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = "++k && l"
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 4)
         self.assertEqual(type(ast[0]), Operator)
         self.assertEqual(ast[0].name, '++')
@@ -111,6 +113,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = "k++ && l"
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 4)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -125,6 +128,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = "k && ++l"
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 4)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -139,6 +143,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = "k{1} && ++l"
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 4)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -156,6 +161,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = "++k && l{1}"
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 4)
         self.assertEqual(type(ast[0]), Operator)
         self.assertEqual(ast[0].name, '++')
@@ -173,6 +179,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = "k && l++"
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 4)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -187,6 +194,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = "k && 'My String'"
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -199,6 +207,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'k && "My String"'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -211,6 +220,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = "'My String' && l"
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), String)
         self.assertEqual(ast[0].name, 'My String')
@@ -223,6 +233,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = '"My String" && l'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), String)
         self.assertEqual(ast[0].name, 'My String')
@@ -235,6 +246,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'k && l'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -247,6 +259,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'k && 2'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -259,6 +272,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = '2 && k'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Value)
         self.assertEqual(ast[0].value, '2')
@@ -271,6 +285,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'k[1] && l'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Indexer)
         self.assertEqual(type(ast[0].attribute), Attribute)
@@ -284,6 +299,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'k[arr[1]] && l'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Indexer)
         self.assertEqual(type(ast[0].attribute), Attribute)
@@ -307,6 +323,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'k && l[1]'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -320,6 +337,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'k && l[getIndex()]'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -336,6 +354,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'k && l[getIndex() { return 1; }]'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -357,6 +376,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'k || l'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -369,6 +389,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'k[1] || l'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Indexer)
         self.assertEqual(type(ast[0].attribute), Attribute)
@@ -382,6 +403,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'k || l[1]'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -395,6 +417,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'k == l'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -407,6 +430,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'k != l'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -419,6 +443,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'k === l'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -431,6 +456,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'k !== l'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -453,6 +479,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'k == isAction()'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -466,6 +493,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'k == isAction(arg0, arg1)'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -483,6 +511,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'k == name.isAction(arg0, arg1)'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -502,6 +531,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'k == MyNamespace::isAction(arg0, arg1)'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -519,6 +549,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'k == MyNameSpace::isAction(arg0 == 1, arg1)'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -542,6 +573,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'k == MyNameSpace::isAction(1 == arg0, arg1)'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -565,6 +597,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'k == MyNameSpace::isAction(arg0 = k, arg1)'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -588,6 +621,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'k == isAction(arg0, arg1) { arg0 = arg1; }'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -606,6 +640,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'k == (arg0, arg1) { arg0 = arg1; }'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -624,6 +659,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'k == (arg0, arg1) -> { arg0 = arg1; }'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -642,6 +678,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = '(arg0, arg1) -> { arg0 = arg1; } == k'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Lambda)
         self.assertEqual(ast[0].name, None)
@@ -660,6 +697,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'k == (arg0, arg1) -> bool { arg0 = arg1; }'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -679,6 +717,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = '(arg0, arg1) -> bool { arg0 = arg1; } == k'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Lambda)
         self.assertEqual(ast[0].name, None)
@@ -698,6 +737,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'k == (arg0, arg1) -> std::string { arg0 = arg1; }'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -717,6 +757,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = '(arg0, arg1) -> std::string { arg0 = arg1; } == k'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Lambda)
         self.assertEqual(ast[0].name, None)
@@ -740,6 +781,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'k == isAction(arg0, arg1) -> { arg0 = arg1; return arg0; }'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -758,6 +800,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'k == isAction(arg0, arg1) -> bool { arg0 = arg1; return arg0; }'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -777,6 +820,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'k == isAction(arg0, arg1) -> std::string { arg0 = arg1; return arg0; }'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -796,6 +840,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'k == isAction(arg0 == arg2, arg1)'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Attribute)
         self.assertEqual(ast[0].name, 'k')
@@ -819,6 +864,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'isAction(arg0, arg1) == k'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), FunctionCall)
         self.assertEqual(ast[0].name, 'isAction')
@@ -836,6 +882,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'name.isAction(arg0, arg1) == k'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), FunctionCall)
         self.assertEqual(ast[0].name, 'isAction')
@@ -855,6 +902,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'MyNamespace::isAction(arg0, arg1) == k'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), FunctionCall)
         self.assertEqual(ast[0].name, 'MyNamespace::isAction')
@@ -872,6 +920,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'MyNamespace::isAction(arg0 == 1, arg1) == k'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), FunctionCall)
         self.assertEqual(ast[0].name, 'MyNamespace::isAction')
@@ -895,6 +944,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'MyNamespace::isAction(1 == arg0, arg1) == k'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), FunctionCall)
         self.assertEqual(ast[0].name, 'MyNamespace::isAction')
@@ -918,6 +968,7 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'isAction(arg0, arg1) { arg0 = arg1; } == k'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), Function)
         self.assertEqual(ast[0].name, 'isAction')
@@ -936,10 +987,12 @@ class TestingExpressionParser(unittest.TestCase):
         example = 'isAction(arg0 == arg2, arg1) == k'
         parser = ExpressionParser(example)
         ast = parser.get_ast()
+        self.assertEqual(type(ast), Expression)
         self.assertEqual(len(ast), 3)
         self.assertEqual(type(ast[0]), FunctionCall)
         self.assertEqual(ast[0].name, 'isAction')
         self.assertEqual(len(ast[0].args), 2)
+        self.assertEqual(type(ast[0].args[0]), Expression)
         self.assertEqual(len(ast[0].args[0]), 3)
         self.assertEqual(type(ast[0].args[0][0]), Attribute)
         self.assertEqual(ast[0].args[0][0].name, 'arg0')

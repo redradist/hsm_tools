@@ -4,7 +4,7 @@ from src.exceptions import ValidationError
 
 
 class ExpressionParser:
-    def __init__(self, statement):
+    def __init__(self, statement, optimize=True):
         self._statement = statement
         self._expressions = Expression()
         self.contexts = []
@@ -20,6 +20,24 @@ class ExpressionParser:
         # NOTE(redrad): Currently workaround to finish parsing statement
         self._parse_expression(' ')
         self._expressions = self.get_most_inner_expression(self._expressions)
+        if type(self._expressions) == Expression and \
+           len(self._expressions) > 1 and \
+           'Comma' in self.contexts:
+            self._expressions = Group(self._expressions)
+            # sub_expression = Expression()
+            # expression = Expression()
+            # for context in self.contexts:
+            #     if len(self._expressions) == 0:
+            #         break
+            #     if context != 'Comma':
+            #         sub_expression.append(self._expressions[0])
+            #         self._expressions.remove(self._expressions[0])
+            #     else:
+            #         expression.append(sub_expression)
+            #         sub_expression = Expression()
+            # if len(sub_expression) > 0:
+            #     expression.append(sub_expression)
+            # self._expressions = expression
 
     _operators = [ '=', '==', '===', '!=', '!==',
                    '>', '>=', '<', '<=', '&', '&&',
@@ -115,7 +133,7 @@ class ExpressionParser:
                             func.return_value = return_value
                         self.temp = []
                         self._parse_expression(ch)
-                elif len(self._expressions) > 0 and type(self._expressions[-1]) == Expression:
+                elif len(self._expressions) > 0 and isinstance(self._expressions[-1], Expression):
                     if self.is_name_letter(ch) or ch == ' ':
                         if not hasattr(self, 'return_value'):
                             self.return_value = ''
@@ -157,9 +175,6 @@ class ExpressionParser:
                     raise ValidationError()
                 self.temp = []
 
-    def unwrap_params(self):
-        pass
-
     def get_most_inner_expression(self, expression):
         if isinstance(expression, Expression) and len(expression) == 1:
             return self.get_most_inner_expression(expression[0])
@@ -173,8 +188,8 @@ class ExpressionParser:
             del self.temp[-1]
             parser = ExpressionParser(''.join(self.temp))
             expression = parser.get_ast()
-            if isinstance(expression, Expression) or \
-              (isinstance(expression, Expression) and len(expression) == 0):
+            if (type(expression) == Expression and len(expression) <= 1) or \
+               type(expression) == Group:
                 self._expressions[-1].args = list(expression)
             else:
                 self._expressions[-1].args = [expression]
@@ -211,7 +226,7 @@ class ExpressionParser:
                     func = Function(func.name, func.object, *func.args)
                     self._expressions[-1] = func
                     func.body = ''.join(self.temp)
-                elif len(self._expressions) > 0 and type(self._expressions[-1]) == Expression:
+                elif len(self._expressions) > 0 and isinstance(self._expressions[-1], Expression):
                     group = self._expressions[-1]
                     body = ''.join(self.temp)
                     anon_func = Lambda(*group._items, body=body)
@@ -258,8 +273,12 @@ class ExpressionParser:
         if ch == ',':
             contexts.append('Comma')
             if len(self._expressions) > 1:
-                self._expressions = Expression(self._expressions)
-            self._expressions = Expression(self._expressions)
+                prev_expression = self._expressions
+                self._expressions = Expression()
+                self._expressions.append(prev_expression)
+            prev_expression = self._expressions
+            self._expressions = Expression()
+            self._expressions.append(prev_expression)
         elif self.is_first_name_letter(ch):
             contexts.append('Text')
             if len(self._expressions) == 0 or \
