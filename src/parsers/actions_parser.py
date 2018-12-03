@@ -2,7 +2,7 @@ import json
 import os
 import re
 
-from src.fsm_types import Action, Function
+from src.parsers.expression_ast import Function
 from src.parsers.expression_parser import ExpressionParser
 
 
@@ -67,9 +67,9 @@ class ActionParser:
                     action_body = ''.join(action_body)
                     action_body = action_body.strip()
             expression_parser = ExpressionParser(action_body)
-            function = expression_parser.parse()
+            function = expression_parser.get_ast()
             function.name = action_name
-            if type(function) != Function:
+            if not isinstance(function, Function):
                 raise ValueError(f'Type of function[{function}] should be Function !!')
             if lang:
                 function.lang = lang

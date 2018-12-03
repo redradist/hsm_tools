@@ -1,4 +1,3 @@
-import json
 import os
 
 from src.fsm_types import State
@@ -31,25 +30,23 @@ class FSMBuilder:
             return FSMBuilder._find_action_name(action_name, state.parent_state)
 
     @staticmethod
-    def _find_tran_action(transition):
-        actions = []
-        for action in transition.action:
-            action_name = action.name
+    def _tie_tran_action(transition):
+        for call_action in transition.call_actions:
+            action_name = call_action.name
             if action_name:
                 found_action = FSMBuilder._find_action_name(action_name, transition.from_state)
-                if found_action != None:
-                    actions.append(found_action)
+                if found_action is not None:
+                    call_action.action = found_action
                     continue
 
                 found_action = FSMBuilder._find_action_name(action_name, transition.to_state)
-                if found_action != None:
-                    actions.append(found_action)
+                if found_action is not None:
+                    call_action.action = found_action
                     continue
 
                 raise ValueError(f'Action for transition[{transition}] is not found !!')
-        return actions
 
-    def build_from(self, uml_diagram):
+    def build_from(self, uml_diagram, lang):
         uml_parser = PlantUMLParser()
         sub_states, transitions = uml_parser.parse_uml_file(uml_diagram)
         fsm_name = os.path.splitext(os.path.basename(uml_diagram))[0]
@@ -63,13 +60,15 @@ class FSMBuilder:
         attribute_parser = AttributeParser(external_attributes)
         action_parser = ActionParser()
         fsm.attributes = attribute_parser.find_all_attribute_for(os.path.dirname(uml_diagram),
-                                                                 fsm_name)
+                                                                 fsm_name,
+                                                                 lang)
         for state in sub_states:
             state.attributes = attribute_parser.find_all_attribute_for(os.path.dirname(uml_diagram),
-                                                                       state.name)
+                                                                       state.name,
+                                                                       lang)
             state.actions = action_parser.find_all_action_for(os.path.dirname(uml_diagram),
-                                                                              state.name)
+                                                              state.name)
         fsm.sub_states = sub_states
         for tran in transitions:
-            tran.action = FSMBuilder._find_tran_action(tran)
+            FSMBuilder._tie_tran_action(tran)
         return fsm

@@ -1,9 +1,10 @@
 import copy
 import regex as re
 
+from src.parsers.expression_ast import FunctionCall, Expression
 from src.parsers.expression_parser import ExpressionParser
-from src.parsers.statement_parser import StatementParser
-from src.fsm_types import State, Transition, Event, Condition, Expression, Action
+from src.parsers.transition_parser import TransitionParser
+from src.fsm_types import State, Transition, Event, Condition
 
 ''
 'EvConfig / isAction(arg0, arg1) \n { arg0 = arg1;  [ arg0 == arg1 ] } //'
@@ -69,17 +70,17 @@ class PlantUMLParser:
 
     def _parse_events(self, events):
         parser = ExpressionParser(events)
-        expression = parser.parse()
+        expression = parser.get_ast()
         return [Event(exp) for exp in expression] if isinstance(expression, Expression) else [Event(expression)]
 
     def _parse_actions(self, actions):
         parser = ExpressionParser(actions)
-        expression = parser.parse()
-        return [Action(exp) for exp in expression] if isinstance(expression, Expression) else [Action(expression)]
+        expression = parser.get_ast()
+        return [FunctionCall(exp) for exp in expression] if isinstance(expression, Expression) else [FunctionCall(expression)]
 
     def _parse_condition(self, condition):
         parser = ExpressionParser(condition)
-        return parser.parse()
+        return parser.get_ast()
 
     def _parse_transition(self, instructions, parent_state=None):
         """
@@ -99,8 +100,8 @@ class PlantUMLParser:
             actions = []
             condition = None
             if comment is not None:
-                parser = StatementParser(comment)
-                raw_events, raw_actions, raw_condition = parser.parse()
+                parser = TransitionParser(comment)
+                raw_events, raw_actions, raw_condition = parser.get_transition_items()
                 events = self._parse_events(raw_events)
                 actions = self._parse_actions(raw_actions)
                 condition = self._parse_condition(raw_condition)

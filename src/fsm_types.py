@@ -144,12 +144,12 @@ class Event(Symbol):
     Object that responsible for storing event information:
         State owner
     """
-    def __init__(self, attribute):
-        if not isinstance(attribute, Symbol):
-            raise TypeError('attribute is not Attribute type')
-        super().__init__(attribute.name,
-                         attribute.object,
-                         *attribute.args)
+    def __init__(self, symbol):
+        if not isinstance(symbol, Symbol):
+            raise TypeError('symbol is not Symbol type')
+        super().__init__(symbol.name,
+                         symbol.object,
+                         *symbol.symbols)
 
 
 class Condition:

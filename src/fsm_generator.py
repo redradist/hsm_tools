@@ -2,15 +2,11 @@
 
 import argparse
 import datetime
-import json
 import re
 import traceback
 
-from jinja2 import Template, Environment
-
+from jinja2 import Environment
 from src.fsm_builder import FSMBuilder
-from src.parsers.attributes_parser import AttributeParser
-from src.parsers.plantuml_parser import PlantUMLParser
 
 jinja2_do_ext = Environment(extensions=['jinja2.ext.do'])
 
@@ -79,11 +75,22 @@ def generate_state_wrapper(state, state_templates, attribute_template, action_te
                 if state.attributes:
                     generate_state_attributes_wrapper(state, attribute_template, dir_to_save)
         index += 1
+    # generate_attributes_wrapper(state.name, attribute[0], attributes, attribute_templates[0], dir_to_save)
     for sub_state in state.sub_states:
         generate_state_wrapper(sub_state, state_templates, attribute_template, action_templates, dir_to_save)
 
 
-def generate_fsm_wrappers(uml_diagram, dir_to_save, state_templates=[], attribute_templates=[], action_templates=[]):
+def generate_fsm_wrappers(uml_diagram, dir_to_save,
+                          state_templates=None,
+                          attribute_templates=None,
+                          action_templates=None):
+    if action_templates is None:
+        action_templates = []
+    if attribute_templates is None:
+        attribute_templates = []
+    if state_templates is None:
+        state_templates = []
+
     if len(state_templates) != 2:
         raise ValueError("Size of state_templates argument should be 2 : CommonAPI Client and CommonAPI Service")
 
@@ -99,7 +106,7 @@ def generate_fsm_wrappers(uml_diagram, dir_to_save, state_templates=[], attribut
         dir_to_save += '/'
 
     builder = FSMBuilder()
-    fsm = builder.build_from(uml_diagram)
+    fsm = builder.build_from(uml_diagram, 'cpp')
 
     generate_state_wrapper(fsm, state_templates, attribute_templates[1], action_templates[2:], dir_to_save)
 
@@ -116,11 +123,11 @@ def generate_fsm_wrappers(uml_diagram, dir_to_save, state_templates=[], attribut
     #
 
 
-if __name__ == '__main__':
-    import os
-    os.chdir(os.path.dirname(__file__))
-    current_dir = os.getcwd()
-
+def get_command_line_args():
+    """
+    Gets command line arguments that was passed to script
+    :return: Command line arguments
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("uml_diagram",
                         help="State Machine UML diagram /<path>/<name>.uml")
@@ -135,7 +142,15 @@ if __name__ == '__main__':
                         help="Templates for generating Attribute file")
     parser.add_argument("--action_templates",
                         help="Templates for generating Action file")
-    args = parser.parse_args()
+    return parser.parse_args()
+
+
+if __name__ == '__main__':
+    import os
+    os.chdir(os.path.dirname(__file__))
+    current_dir = os.getcwd()
+
+    args = get_command_line_args()
     if args.default:
         if not args.state_templates:
             args.state_templates = []
@@ -158,5 +173,5 @@ if __name__ == '__main__':
                               args.attribute_templates,
                               args.action_templates)
     except Exception as ex:
-        print("ex is " + str(ex))
+        print("ex is {}".format(str(ex)))
         traceback.print_exc()

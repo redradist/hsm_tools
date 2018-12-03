@@ -193,7 +193,7 @@ class Symbol:
     def __init__(self, name, object=None, *symbols):
         self.object = object
         self.name = name
-        self.symbols = symbols
+        self.symbols = list(symbols)
         self.attr_type = None
 
     def is_complex(self):

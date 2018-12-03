@@ -4,7 +4,7 @@ import json
 import os
 import re
 
-from src.fsm_types import Attribute
+from src.fsm_types import Symbol
 
 __attributes_json = '''
 {
@@ -81,7 +81,7 @@ class AttributeParser:
         attributes = []
         for key, value in objs.items():
             if type(value) == str:
-                att = Attribute(key, object=owner)
+                att = Symbol(key, object=owner)
                 if self.is_nested_type(value):
                     if not path:
                         raise ValueError('Unknown current path !!')
@@ -98,11 +98,8 @@ class AttributeParser:
                 attributes.append(att)
             elif type(value) == dict:
                 atts = self._parse_objects(value, key, path=path)
-                att = Attribute(key, object=owner)
-                att.attr_type = None
-                if hasattr(att, 'args'):
-                    att.args = []
-                att.args.extend(atts)
+                att = Symbol(key, object=owner)
+                att.symbols.extend(atts)
                 attributes.append(att)
         return attributes
 
@@ -148,7 +145,7 @@ class AttributeParser:
             text = fl.readlines()
             return self.parse_json(text)
 
-    def find_all_attribute_for(self, path, state_name):
+    def find_all_attribute_for(self, path, state_name, lang):
         attributes = []
         for f in os.listdir(path):
             full_file_path = os.path.abspath(path) + '/' + f
