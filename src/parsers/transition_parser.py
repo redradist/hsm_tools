@@ -139,7 +139,7 @@ class TransitionParser:
 if __name__ == '__main__':
     example = 'EvConfig1() [ i > k ] / Action() { [] }, Action2()'
     parser = TransitionParser(example)
-    events, actions, condition = parser.get_transition_items()
+    events, condition, actions = parser.get_transition_items()
     print(events)
     print(actions)
     print(condition)

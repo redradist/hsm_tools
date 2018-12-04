@@ -1,3 +1,4 @@
 .idea/
 __pycache__/
 tests/simple_fsm/gen_dir/
+.pytest_cache/

@@ -2,7 +2,7 @@ import unittest
 
 from src.parsers.expression_parser import ExpressionParser
 from src.parsers.expression_ast import Function, Value, Symbol, Operator, String, Indexer, Expression, Object, \
-    FunctionCall, Lambda
+    FunctionCall, Lambda, Sequence
 from src.exceptions import ValidationError
 
 
@@ -35,6 +35,20 @@ class TestingExpressionParser(unittest.TestCase):
         self.assertEqual(len(ast.args), 1)
         self.assertEqual(type(ast.args[0]), Value)
         self.assertEqual(ast.args[0].value, '2')
+
+    def test__ActionArgValue_ActionArgValue__Valid(self):
+        example = "Action(2), Action2(2)"
+        parser = ExpressionParser(example)
+        ast = parser.get_ast()
+        self.assertEqual(type(ast), Sequence)
+        self.assertEqual(type(ast[0]), FunctionCall)
+        self.assertEqual(len(ast[0].args), 1)
+        self.assertEqual(type(ast[0].args[0]), Value)
+        self.assertEqual(ast[0].args[0].value, '2')
+        self.assertEqual(type(ast[1]), FunctionCall)
+        self.assertEqual(len(ast[1].args), 1)
+        self.assertEqual(type(ast[1].args[0]), Value)
+        self.assertEqual(ast[1].args[0].value, '2')
 
     def test__ActionUnderScoreNameArgValue__Valid(self):
         example = "my_action(2)"

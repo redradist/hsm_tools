@@ -15,10 +15,6 @@ class ExpressionParser:
         # NOTE(redra): Currently workaround to finish parsing statement
         self._parse_expression(' ')
         self._expressions = self.get_most_inner_expression(self._expressions)
-        if type(self._expressions) == Expression and \
-           len(self._expressions) > 1 and \
-           'Comma' in self._contexts:
-            self._expressions = Sequence(self._expressions)
 
         self._delete_temporary_objects()
 
@@ -185,7 +181,7 @@ class ExpressionParser:
             parser = ExpressionParser(''.join(self._temp))
             expression = parser.get_ast()
             if (type(expression) == Expression and len(expression) <= 1) or \
-               type(expression) == Sequence:
+                type(expression) == Sequence:
                 self._expressions[-1].args = list(expression)
             else:
                 self._expressions[-1].args = [expression]
@@ -268,20 +264,18 @@ class ExpressionParser:
     def _context_analyzer(self, ch, contexts):
         if ch == ',':
             contexts.append('Comma')
-            if len(self._expressions) > 1:
-                prev_expression = self._expressions
-                self._expressions = Expression()
-                self._expressions.append(prev_expression)
-            prev_expression = self._expressions
-            self._expressions = Expression()
-            self._expressions.append(prev_expression)
+            sequence = Sequence()
+            sequence.append(self.get_most_inner_expression(self._expressions))
+            self._expressions = sequence
         elif self.is_first_name_letter(ch):
             contexts.append('Text')
             if len(self._expressions) == 0 or \
                 type(self._expressions[-1]) != Symbol or \
                 self._expressions[-1].object == None or \
                 self._expressions[-1].name != None:
-                if len(self._expressions) > 0 and type(self._expressions[-1]) == Expression:
+                if len(self._expressions) > 0 and \
+                   type(self._expressions[-1]) == Expression and \
+                   type(self._expressions) != Sequence:
                     self._expressions[-1].append(Symbol(None))
                 else:
                     self._expressions.append(Symbol(None))

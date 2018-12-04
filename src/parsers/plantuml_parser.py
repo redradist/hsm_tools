@@ -101,7 +101,7 @@ class PlantUMLParser:
             condition = None
             if comment is not None:
                 parser = TransitionParser(comment)
-                raw_events, raw_actions, raw_condition = parser.get_transition_items()
+                raw_events, raw_condition, raw_actions = parser.get_transition_items()
                 events = self._parse_events(raw_events)
                 actions = self._parse_actions(raw_actions)
                 condition = self._parse_condition(raw_condition)

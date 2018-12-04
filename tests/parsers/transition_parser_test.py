@@ -13,6 +13,14 @@ class TestingTransitionParser(unittest.TestCase):
         """Currently nothing to do. Use it for reinitialization data after test"""
         pass
 
+    def test__Event_ActionAction_Condition2__Valid(self):
+        example = 'powerOn{} [ name.size() > default_name.size() ] / Action(), Action2()'
+        parser = TransitionParser(example)
+        events, condition, actions = parser.get_transition_items()
+        self.assertEqual(events, 'powerOn{}')
+        self.assertEqual(condition, 'name.size() > default_name.size()')
+        self.assertEqual(actions, 'Action(), Action2()')
+
     def test__Event_ActionAction_Condition__Valid(self):
         example = 'EvConfig1() [ i > k ] / Action1() { [] }, Action2()'
         parser = TransitionParser(example)

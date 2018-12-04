@@ -1,6 +1,6 @@
 class Expression:
-    def __init__(self):
-        self._items = []
+    def __init__(self, *items):
+        self._items = list(*items)
 
     def append(self, value):
         self._items.append(value)
@@ -177,12 +177,17 @@ class Transition:
 
 
 class Sequence(Expression):
-    def __init__(self, expression):
+    def __init__(self):
         Expression.__init__(self)
-        if isinstance(expression, Expression):
-            self._items = expression._items
-        else:
-            self._items = [expression]
+
+    # def __init__(self, expression):
+    #     Expression.__init__(self)
+    #     if isinstance(expression, Expression):
+    #         self._items = expression._items
+    #     elif len(expression) > 1:
+    #         self._items = [Expression(expression)]
+    #     else:
+    #         self._items = [expression]
 
     def __str__(self):
         result = '(' + ', '.join(str(item) for item in self._items) + ')'
