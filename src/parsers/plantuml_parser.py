@@ -76,7 +76,7 @@ class PlantUMLParser:
     def _parse_actions(self, actions):
         parser = ExpressionParser(actions)
         expression = parser.get_ast()
-        return [FunctionCall(exp) for exp in expression] if isinstance(expression, Expression) else [FunctionCall(expression)]
+        return [exp for exp in expression] if isinstance(expression, Expression) else [expression]
 
     def _parse_condition(self, condition):
         parser = ExpressionParser(condition)

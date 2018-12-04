@@ -36,6 +36,16 @@ class TestingExpressionParser(unittest.TestCase):
         self.assertEqual(type(ast.args[0]), Value)
         self.assertEqual(ast.args[0].value, '2')
 
+    def test__ActionEmpty_ActionEmpty__Valid(self):
+        example = "Action(), Action2()"
+        parser = ExpressionParser(example)
+        ast = parser.get_ast()
+        self.assertEqual(type(ast), Sequence)
+        self.assertEqual(type(ast[0]), FunctionCall)
+        self.assertEqual(len(ast[0].args), 0)
+        self.assertEqual(type(ast[1]), FunctionCall)
+        self.assertEqual(len(ast[1].args), 0)
+
     def test__ActionArgValue_ActionArgValue__Valid(self):
         example = "Action(2), Action2(2)"
         parser = ExpressionParser(example)
