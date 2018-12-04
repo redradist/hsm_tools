@@ -67,8 +67,11 @@ class ActionParser:
                     action_body = ''.join(action_body)
                     action_body = action_body.strip()
             expression_parser = ExpressionParser(action_body)
-            function = expression_parser.get_ast()
-            function.name = action_name
+            ast = expression_parser.get_ast()
+            function = Function(action_name,
+                                body=ast.body,
+                                return_value=ast.return_value)
+            function.params = ast.params
             if not isinstance(function, Function):
                 raise ValueError(f'Type of function[{function}] should be Function !!')
             if lang:
