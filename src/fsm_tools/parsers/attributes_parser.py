@@ -2,7 +2,7 @@ import json
 import os
 import re
 
-from src.fsm_types import Symbol
+from fsm_tools.fsm_types import Symbol
 
 
 class AttributeParser:

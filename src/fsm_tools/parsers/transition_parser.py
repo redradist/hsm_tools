@@ -1,4 +1,4 @@
-from src.exceptions import ValidationError
+from fsm_tools.exceptions import ValidationError
 
 
 class TransitionParser:

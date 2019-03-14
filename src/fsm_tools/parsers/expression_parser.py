@@ -1,6 +1,6 @@
-from src.parsers.expression_ast import Value, Symbol, Operator, Indexer, Sequence, String, Object, Lambda, \
+from fsm_tools.parsers.expression_ast import Value, Symbol, Operator, Indexer, Sequence, String, Object, Lambda, \
     FunctionCall, Function, Expression
-from src.exceptions import ValidationError
+from fsm_tools.exceptions import ValidationError
 
 
 class ExpressionParser:

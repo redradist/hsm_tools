@@ -1,4 +1,4 @@
-from src.parsers.expression_ast import Symbol
+from fsm_tools.parsers.expression_ast import Symbol
 
 
 class State:

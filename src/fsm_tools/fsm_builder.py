@@ -1,9 +1,9 @@
 import os
 
-from src.fsm_types import State
-from src.parsers.actions_parser import ActionParser
-from src.parsers.attributes_parser import AttributeParser
-from src.parsers.plantuml_parser import PlantUMLParser
+from fsm_tools.fsm_types import State
+from fsm_tools.parsers.actions_parser import ActionParser
+from fsm_tools.parsers.attributes_parser import AttributeParser
+from fsm_tools.parsers.plantuml_parser import PlantUMLParser
 
 
 class FSMBuilder:

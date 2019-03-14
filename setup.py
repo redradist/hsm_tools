@@ -12,6 +12,7 @@ setuptools.setup(
                 "HSM (Hierarchical State Machine)",
     long_description=long_description,
     long_description_content_type="text/markdown",
+    package_dir={'fsm_tools': 'src/fsm_tools'},
     packages=setuptools.find_packages(),
     classifiers=(
         "Programming Language :: Python :: 3",

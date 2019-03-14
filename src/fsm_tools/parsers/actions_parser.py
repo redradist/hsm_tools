@@ -2,8 +2,8 @@ import json
 import os
 import re
 
-from src.parsers.expression_ast import Function
-from src.parsers.expression_parser import ExpressionParser
+from fsm_tools.parsers.expression_ast import Function
+from fsm_tools.parsers.expression_parser import ExpressionParser
 
 
 class ActionParser:

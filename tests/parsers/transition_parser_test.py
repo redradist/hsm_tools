@@ -1,7 +1,7 @@
 import unittest
 
-from src.parsers.transition_parser import TransitionParser
-from src.exceptions import ValidationError
+from fsm_tools.parsers.transition_parser import TransitionParser
+from fsm_tools.exceptions import ValidationError
 
 
 class TestingTransitionParser(unittest.TestCase):

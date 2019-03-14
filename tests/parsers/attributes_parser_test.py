@@ -1,8 +1,8 @@
 import os
 import unittest
 
-from src.fsm_types import Symbol
-from src.parsers.attributes_parser import AttributeParser
+from fsm_tools.fsm_types import Symbol
+from fsm_tools.parsers.attributes_parser import AttributeParser
 
 
 class TestingAttributesParser(unittest.TestCase):

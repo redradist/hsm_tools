@@ -1,9 +1,9 @@
 import unittest
 
-from src.parsers.expression_parser import ExpressionParser
-from src.parsers.expression_ast import Function, Value, Symbol, Operator, String, Indexer, Expression, Object, \
+from fsm_tools.parsers.expression_parser import ExpressionParser
+from fsm_tools.parsers.expression_ast import Function, Value, Symbol, Operator, String, Indexer, Expression, Object, \
     FunctionCall, Lambda, Sequence
-from src.exceptions import ValidationError
+from fsm_tools.exceptions import ValidationError
 
 
 class TestingExpressionParser(unittest.TestCase):

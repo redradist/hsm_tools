@@ -6,7 +6,7 @@ import re
 import traceback
 
 from jinja2 import Environment
-from src.fsm_builder import FSMBuilder
+from fsm_tools.fsm_builder import FSMBuilder
 
 jinja2_do_ext = Environment(extensions=['jinja2.ext.do'])
 

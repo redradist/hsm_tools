@@ -1,10 +1,10 @@
 import copy
 import regex as re
 
-from src.parsers.expression_ast import FunctionCall, Expression
-from src.parsers.expression_parser import ExpressionParser
-from src.parsers.transition_parser import TransitionParser
-from src.fsm_types import State, Transition, Event, Condition
+from fsm_tools.parsers.expression_ast import Expression
+from fsm_tools.parsers.expression_parser import ExpressionParser
+from fsm_tools.parsers.transition_parser import TransitionParser
+from fsm_tools.fsm_types import State, Transition, Event
 
 ''
 'EvConfig / isAction(arg0, arg1) \n { arg0 = arg1;  [ arg0 == arg1 ] } //'
