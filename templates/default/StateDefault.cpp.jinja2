@@ -108,8 +108,8 @@ bool {{state.name}}_State::handleEvent(const IEvent & _ev) {
     isProcessed = true;
     auto toState = std::dynamic_pointer_cast<{{transition.to_state}}>(child_states_[{{transition.to_state.index}}]);
     fromState->exitTo(toState, _ev);
-    {% for action in transition.action -%}
-    {{action}};
+    {% for call_action in transition.call_actions -%}
+    {{call_action}};
     {% endfor -%}
     toState->entryFrom(fromState, _ev);
     current_ = toState;

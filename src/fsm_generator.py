@@ -145,12 +145,7 @@ def get_command_line_args():
     return parser.parse_args()
 
 
-if __name__ == '__main__':
-    import os
-    os.chdir(os.path.dirname(__file__))
-    current_dir = os.getcwd()
-
-    args = get_command_line_args()
+def analyze_arguments(args):
     if args.default:
         if not args.state_templates:
             args.state_templates = []
@@ -158,14 +153,27 @@ if __name__ == '__main__':
             args.state_templates.append(os.path.join(current_dir, "../templates/default/StateDefault.cpp.jinja2"))
         if not args.attribute_templates:
             args.attribute_templates = []
-            args.attribute_templates.append(os.path.join(current_dir, "../templates/default/AttributesDefault.hpp.jinja2"))
-            args.attribute_templates.append(os.path.join(current_dir, "../templates/default/StateAttributesDefault.hpp.jinja2"))
+            args.attribute_templates.append(
+                os.path.join(current_dir, "../templates/default/AttributesDefault.hpp.jinja2"))
+            args.attribute_templates.append(
+                os.path.join(current_dir, "../templates/default/StateAttributesDefault.hpp.jinja2"))
         if not args.action_templates:
             args.action_templates = []
             args.action_templates.append(os.path.join(current_dir, "../templates/default/ActionsDefault.hpp.jinja2"))
             args.action_templates.append(os.path.join(current_dir, "../templates/default/ActionsDefault.cpp.jinja2"))
-            args.action_templates.append(os.path.join(current_dir, "../templates/default/StateActionsDefault.hpp.jinja2"))
-            args.action_templates.append(os.path.join(current_dir, "../templates/default/StateActionsDefault.cpp.jinja2"))
+            args.action_templates.append(
+                os.path.join(current_dir, "../templates/default/StateActionsDefault.hpp.jinja2"))
+            args.action_templates.append(
+                os.path.join(current_dir, "../templates/default/StateActionsDefault.cpp.jinja2"))
+
+
+if __name__ == '__main__':
+    import os
+    os.chdir(os.path.dirname(__file__))
+    current_dir = os.getcwd()
+
+    args = get_command_line_args()
+    analyze_arguments(args)
     try:
         generate_fsm_wrappers(args.uml_diagram,
                               args.dir_to_save,

@@ -1,3 +1,4 @@
+import os
 import unittest
 
 from src.fsm_types import Symbol
@@ -15,19 +16,27 @@ class TestingAttributesParser(unittest.TestCase):
 
     def test__FindAllAttributesFiles__Valid(self):
         attribute_files = AttributeParser.find_all_attribute_files('../simple_fsm')
-        self.assertEqual(len(attribute_files), 1)
+        self.assertEqual(len(attribute_files), 3)
+        set_of_file_names = set(os.path.basename(entry[1]) for entry in attribute_files)
+        self.assertTrue('FSM.json' in set_of_file_names)
+        self.assertTrue('SimpleFSM.json' in set_of_file_names)
+        self.assertTrue('SimpleFSM.attributes.json' in set_of_file_names)
 
     def test__ParseAllAttributesFiles__Valid(self):
         attribute_files = AttributeParser.find_all_attribute_files('../simple_fsm')
-        self.assertEqual(len(attribute_files), 1)
+        self.assertEqual(len(attribute_files), 3)
+        set_of_file_names = set(os.path.basename(entry[1]) for entry in attribute_files)
+        self.assertTrue('FSM.json' in set_of_file_names)
+        self.assertTrue('SimpleFSM.json' in set_of_file_names)
+        self.assertTrue('SimpleFSM.attributes.json' in set_of_file_names)
         attributes = []
-        parser = AttributeParser()
         for attribute_file in attribute_files:
-            new_attributes = parser.parse_file(attribute_file[1])
+            parser = AttributeParser(file=attribute_file[1])
+            new_attributes = parser.attributes
             if new_attributes:
                 attributes.extend(new_attributes)
 
-        self.assertEqual(len(attributes), 2)
+        self.assertEqual(len(attributes), 12)
 
     def test__OneAttributes0__Valid(self):
         example_json = '''
@@ -41,22 +50,22 @@ class TestingAttributesParser(unittest.TestCase):
             }
         }
         '''
-        parser = AttributeParser()
-        attributes = parser.parse_json(example_json)
+        parser = AttributeParser(example_json)
+        attributes = parser.attributes
         list_of_attributes = list(attributes)
         self.assertEqual(len(list_of_attributes), 1)
         attribute0 = list_of_attributes[0]
-        self.assertEqual(len(attribute0.args), 5)
-        self.assertEqual(type(attribute0.args[0]), Symbol)
-        self.assertEqual(attribute0.args[0].attr_type, 'String')
-        self.assertEqual(type(attribute0.args[1]), Symbol)
-        self.assertEqual(attribute0.args[1].attr_type, 'Number')
-        self.assertEqual(type(attribute0.args[2]), Symbol)
-        self.assertEqual(attribute0.args[2].attr_type, 'Integer')
-        self.assertEqual(type(attribute0.args[3]), Symbol)
-        self.assertEqual(attribute0.args[3].attr_type, 'Float')
-        self.assertEqual(type(attribute0.args[4]), Symbol)
-        self.assertEqual(attribute0.args[4].attr_type, 'Boolean')
+        self.assertEqual(len(attribute0.symbols), 5)
+        self.assertEqual(type(attribute0.symbols[0]), Symbol)
+        self.assertEqual(attribute0.symbols[0].attr_type, 'String')
+        self.assertEqual(type(attribute0.symbols[1]), Symbol)
+        self.assertEqual(attribute0.symbols[1].attr_type, 'Number')
+        self.assertEqual(type(attribute0.symbols[2]), Symbol)
+        self.assertEqual(attribute0.symbols[2].attr_type, 'Integer')
+        self.assertEqual(type(attribute0.symbols[3]), Symbol)
+        self.assertEqual(attribute0.symbols[3].attr_type, 'Float')
+        self.assertEqual(type(attribute0.symbols[4]), Symbol)
+        self.assertEqual(attribute0.symbols[4].attr_type, 'Boolean')
 
     def test__OneAttributes1__Valid(self):
         example_json = '''
@@ -64,8 +73,8 @@ class TestingAttributesParser(unittest.TestCase):
             "id0": "Number"
         }
         '''
-        parser = AttributeParser()
-        attributes = parser.parse_json(example_json)
+        parser = AttributeParser(example_json)
+        attributes = parser.attributes
         list_of_attributes = list(attributes)
         self.assertEqual(len(list_of_attributes), 1)
         attribute0 = list_of_attributes[0]
@@ -86,28 +95,28 @@ class TestingAttributesParser(unittest.TestCase):
             "id4": "Boolean"
         }
         '''
-        parser = AttributeParser()
-        attributes = parser.parse_json(example_json)
+        parser = AttributeParser(example_json)
+        attributes = parser.attributes
         list_of_attributes = list(attributes)
         self.assertEqual(len(list_of_attributes), 2)
         attribute0 = list_of_attributes[0]
         self.assertEqual(attribute0.name, 'name')
-        self.assertEqual(len(attribute0.args), 5)
-        self.assertEqual(type(attribute0.args[0]), Symbol)
-        self.assertEqual(attribute0.args[0].name, 'name')
-        self.assertEqual(attribute0.args[0].attr_type, 'String')
-        self.assertEqual(type(attribute0.args[1]), Symbol)
-        self.assertEqual(attribute0.args[1].name, 'id0')
-        self.assertEqual(attribute0.args[1].attr_type, 'Number')
-        self.assertEqual(type(attribute0.args[2]), Symbol)
-        self.assertEqual(attribute0.args[2].name, 'id1')
-        self.assertEqual(attribute0.args[2].attr_type, 'Integer')
-        self.assertEqual(type(attribute0.args[3]), Symbol)
-        self.assertEqual(attribute0.args[3].name, 'id3')
-        self.assertEqual(attribute0.args[3].attr_type, 'Float')
-        self.assertEqual(type(attribute0.args[4]), Symbol)
-        self.assertEqual(attribute0.args[4].name, 'id4')
-        self.assertEqual(attribute0.args[4].attr_type, 'Boolean')
+        self.assertEqual(len(attribute0.symbols), 5)
+        self.assertEqual(type(attribute0.symbols[0]), Symbol)
+        self.assertEqual(attribute0.symbols[0].name, 'name')
+        self.assertEqual(attribute0.symbols[0].attr_type, 'String')
+        self.assertEqual(type(attribute0.symbols[1]), Symbol)
+        self.assertEqual(attribute0.symbols[1].name, 'id0')
+        self.assertEqual(attribute0.symbols[1].attr_type, 'Number')
+        self.assertEqual(type(attribute0.symbols[2]), Symbol)
+        self.assertEqual(attribute0.symbols[2].name, 'id1')
+        self.assertEqual(attribute0.symbols[2].attr_type, 'Integer')
+        self.assertEqual(type(attribute0.symbols[3]), Symbol)
+        self.assertEqual(attribute0.symbols[3].name, 'id3')
+        self.assertEqual(attribute0.symbols[3].attr_type, 'Float')
+        self.assertEqual(type(attribute0.symbols[4]), Symbol)
+        self.assertEqual(attribute0.symbols[4].name, 'id4')
+        self.assertEqual(attribute0.symbols[4].attr_type, 'Boolean')
 
         attribute1 = list_of_attributes[1]
         self.assertEqual(type(attribute1), Symbol)
@@ -128,28 +137,28 @@ class TestingAttributesParser(unittest.TestCase):
             "id5": "Integer"
         }
         '''
-        parser = AttributeParser()
-        attributes = parser.parse_json(example_json)
+        parser = AttributeParser(example_json)
+        attributes = parser.attributes
         list_of_attributes = list(attributes)
         self.assertEqual(len(list_of_attributes), 3)
         attribute0 = list_of_attributes[0]
         self.assertEqual(attribute0.name, 'name')
-        self.assertEqual(len(attribute0.args), 5)
-        self.assertEqual(type(attribute0.args[0]), Symbol)
-        self.assertEqual(attribute0.args[0].name, 'name')
-        self.assertEqual(attribute0.args[0].attr_type, 'String')
-        self.assertEqual(type(attribute0.args[1]), Symbol)
-        self.assertEqual(attribute0.args[1].name, 'id0')
-        self.assertEqual(attribute0.args[1].attr_type, 'Number')
-        self.assertEqual(type(attribute0.args[2]), Symbol)
-        self.assertEqual(attribute0.args[2].name, 'id1')
-        self.assertEqual(attribute0.args[2].attr_type, 'Integer')
-        self.assertEqual(type(attribute0.args[3]), Symbol)
-        self.assertEqual(attribute0.args[3].name, 'id3')
-        self.assertEqual(attribute0.args[3].attr_type, 'Float')
-        self.assertEqual(type(attribute0.args[4]), Symbol)
-        self.assertEqual(attribute0.args[4].name, 'id4')
-        self.assertEqual(attribute0.args[4].attr_type, 'Boolean')
+        self.assertEqual(len(attribute0.symbols), 5)
+        self.assertEqual(type(attribute0.symbols[0]), Symbol)
+        self.assertEqual(attribute0.symbols[0].name, 'name')
+        self.assertEqual(attribute0.symbols[0].attr_type, 'String')
+        self.assertEqual(type(attribute0.symbols[1]), Symbol)
+        self.assertEqual(attribute0.symbols[1].name, 'id0')
+        self.assertEqual(attribute0.symbols[1].attr_type, 'Number')
+        self.assertEqual(type(attribute0.symbols[2]), Symbol)
+        self.assertEqual(attribute0.symbols[2].name, 'id1')
+        self.assertEqual(attribute0.symbols[2].attr_type, 'Integer')
+        self.assertEqual(type(attribute0.symbols[3]), Symbol)
+        self.assertEqual(attribute0.symbols[3].name, 'id3')
+        self.assertEqual(attribute0.symbols[3].attr_type, 'Float')
+        self.assertEqual(type(attribute0.symbols[4]), Symbol)
+        self.assertEqual(attribute0.symbols[4].name, 'id4')
+        self.assertEqual(attribute0.symbols[4].attr_type, 'Boolean')
 
         attribute1 = list_of_attributes[1]
         self.assertEqual(type(attribute1), Symbol)
@@ -177,32 +186,32 @@ class TestingAttributesParser(unittest.TestCase):
             "id5": "Integer"
         }
         '''
-        parser = AttributeParser()
-        attributes = parser.parse_json(example_json)
+        parser = AttributeParser(example_json)
+        attributes = parser.attributes
         list_of_attributes = list(attributes)
         self.assertEqual(len(list_of_attributes), 3)
         attribute0 = list_of_attributes[0]
         self.assertEqual(attribute0.name, 'name0')
-        self.assertEqual(len(attribute0.args), 5)
-        sub_attribute0 = list_of_attributes[0].args[0]
+        self.assertEqual(len(attribute0.symbols), 5)
+        sub_attribute0 = list_of_attributes[0].symbols[0]
         self.assertEqual(type(sub_attribute0), Symbol)
         self.assertEqual(sub_attribute0.name, 'name1')
-        self.assertEqual(len(sub_attribute0.args), 1)
-        self.assertEqual(type(sub_attribute0.args[0]), Symbol)
-        self.assertEqual(sub_attribute0.args[0].name, 'id0')
-        self.assertEqual(sub_attribute0.args[0].attr_type, 'Number')
-        self.assertEqual(type(attribute0.args[1]), Symbol)
-        self.assertEqual(attribute0.args[1].name, 'id0')
-        self.assertEqual(attribute0.args[1].attr_type, 'Number')
-        self.assertEqual(type(attribute0.args[2]), Symbol)
-        self.assertEqual(attribute0.args[2].name, 'id1')
-        self.assertEqual(attribute0.args[2].attr_type, 'Integer')
-        self.assertEqual(type(attribute0.args[3]), Symbol)
-        self.assertEqual(attribute0.args[3].name, 'id3')
-        self.assertEqual(attribute0.args[3].attr_type, 'Float')
-        self.assertEqual(type(attribute0.args[4]), Symbol)
-        self.assertEqual(attribute0.args[4].name, 'id4')
-        self.assertEqual(attribute0.args[4].attr_type, 'Boolean')
+        self.assertEqual(len(sub_attribute0.symbols), 1)
+        self.assertEqual(type(sub_attribute0.symbols[0]), Symbol)
+        self.assertEqual(sub_attribute0.symbols[0].name, 'id0')
+        self.assertEqual(sub_attribute0.symbols[0].attr_type, 'Number')
+        self.assertEqual(type(attribute0.symbols[1]), Symbol)
+        self.assertEqual(attribute0.symbols[1].name, 'id0')
+        self.assertEqual(attribute0.symbols[1].attr_type, 'Number')
+        self.assertEqual(type(attribute0.symbols[2]), Symbol)
+        self.assertEqual(attribute0.symbols[2].name, 'id1')
+        self.assertEqual(attribute0.symbols[2].attr_type, 'Integer')
+        self.assertEqual(type(attribute0.symbols[3]), Symbol)
+        self.assertEqual(attribute0.symbols[3].name, 'id3')
+        self.assertEqual(attribute0.symbols[3].attr_type, 'Float')
+        self.assertEqual(type(attribute0.symbols[4]), Symbol)
+        self.assertEqual(attribute0.symbols[4].name, 'id4')
+        self.assertEqual(attribute0.symbols[4].attr_type, 'Boolean')
 
         attribute1 = list_of_attributes[1]
         self.assertEqual(type(attribute1), Symbol)

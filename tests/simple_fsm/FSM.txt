@@ -1,17 +1,15 @@
 @startuml
 
-!include NotShooting.txt
-
 [*] --> SimpleFSM
 SimpleFSM --> [*]
 
 state "Simple FSM (Example)" as SimpleFSM {
   state "Idle mode" as Inactive
   state "Configuring mode" as Active
-  [*] --> Inactive : startOn{} / Action(), () { return 1; }
+  [*] --> Inactive : startOn{} / Action(), Action2(), () { return 1; }
   [*] --> Inactive : powerOn{}
   [*] --> Inactive
-  Inactive --> Active : powerOn{} / Action() {}, Action2() [ name.size() > default_name.size() ]
+  Inactive --> Active : powerOn{} [ name.size() > default_name.size() ] / Action(), Action2()
   Active --> [*]
 }
 

@@ -54,18 +54,16 @@ class FSMBuilder:
 
         FSMBuilder._index_each_states(sub_states, 0)
         FSMBuilder._index_each_transitions(transitions, 0)
-        attribute_files, state_attribute_files, state_config_files = AttributeParser.find_all_attribute_files(
+        attribute_files = AttributeParser.find_all_attribute_files(
             os.path.dirname(uml_diagram))
         external_attributes = {attrib_name for attrib_name, _ in attribute_files}
-        attribute_parser = AttributeParser(external_attributes)
+        attribute_parser = AttributeParser()
         action_parser = ActionParser()
-        fsm.attributes = attribute_parser.find_all_attribute_for(os.path.dirname(uml_diagram),
-                                                                 fsm_name,
-                                                                 lang)
+        fsm.attributes = attribute_parser.find_all_attributes_for(os.path.dirname(uml_diagram),
+                                                                  fsm_name)
         for state in sub_states:
-            state.attributes = attribute_parser.find_all_attribute_for(os.path.dirname(uml_diagram),
-                                                                       state.name,
-                                                                       lang)
+            state.attributes = attribute_parser.find_all_attributes_for(os.path.dirname(uml_diagram),
+                                                                        state.name)
             state.actions = action_parser.find_all_action_for(os.path.dirname(uml_diagram),
                                                               state.name)
         fsm.sub_states = sub_states
