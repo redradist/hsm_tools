@@ -18,7 +18,7 @@ class {{state.name}}_State : public IState {
  public:
   static
   std::shared_ptr<IState> buildState(std::weak_ptr<IState> _parent = std::weak_ptr<IState>()) {
-    return std::shared_ptr<{{state.name}}_State>(new {{state.name}}_State(_parent));
+    return std::make_shared<{{state.name}}_State>(_parent);
   }
   ~{{state.name}}_State();
 

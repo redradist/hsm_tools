@@ -94,6 +94,7 @@ class TransitionParser:
                 self._num_of_open_square_brackets == 0 and \
                 self._num_of_open_single_quote == 0 and \
                 self._num_of_open_double_quote == 0:
+                index -= 1
                 break
             self._update_counters(ch)
             events += ch
@@ -102,20 +103,24 @@ class TransitionParser:
     def _parse_condition(self, statement):
         statement = statement.strip()
 
-        index = 0
-        condition = ''
-        for ch in statement:
-            index += 1
-            if ch == ']' and \
-                self._num_of_open_braces == 0 and \
-                self._num_of_open_parentheses == 0 and \
-                self._num_of_open_square_brackets == 0 and \
-                self._num_of_open_single_quote == 0 and \
-                self._num_of_open_double_quote == 0:
-                break
-            self._update_counters(ch)
-            condition += ch
-        return condition.strip(), statement[index:]
+        if len(statement) > 2 and statement[0] == '[' and ']' in statement:
+            statement = statement[1:]
+            index = 0
+            condition = ''
+            for ch in statement:
+                index += 1
+                if ch == ']' and \
+                    self._num_of_open_braces == 0 and \
+                    self._num_of_open_parentheses == 0 and \
+                    self._num_of_open_square_brackets == 0 and \
+                    self._num_of_open_single_quote == 0 and \
+                    self._num_of_open_double_quote == 0:
+                    break
+                self._update_counters(ch)
+                condition += ch
+            return condition.strip(), statement[index:]
+        else:
+            return '', statement
 
     def _parse_actions(self, statement):
         statement = statement.strip()

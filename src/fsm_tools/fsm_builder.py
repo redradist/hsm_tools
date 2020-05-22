@@ -46,7 +46,7 @@ class FSMBuilder:
 
                 raise ValueError(f'Action for transition[{transition}] is not found !!')
 
-    def build_from(self, uml_diagram, lang):
+    def build_from(self, uml_diagram):
         uml_parser = PlantUMLParser()
         sub_states, transitions = uml_parser.parse_uml_file(uml_diagram)
         fsm_name = os.path.splitext(os.path.basename(uml_diagram))[0]

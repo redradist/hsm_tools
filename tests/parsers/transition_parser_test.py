@@ -129,6 +129,14 @@ class TestingTransitionParser(unittest.TestCase):
         self.assertEqual(condition, 'i > k')
         self.assertEqual(actions, 'Action1() { [] }, Action2()')
 
+    def test__EventArgEventArgBody_ActionAction__Valid(self):
+        example = 'EvConfig1(1), EvConfig2(2) { } / Action1() { [] }, Action2()'
+        parser = TransitionParser(example)
+        events, conditions, actions = parser.get_transition_items()
+        self.assertEqual(events, 'EvConfig1(1), EvConfig2(2) { }')
+        self.assertEqual(conditions, '')
+        self.assertEqual(actions, 'Action1() { [] }, Action2()')
+
     def test__EventArgEventArgBody_ActionAction_Condition__Invalid(self):
         example = 'EvConfig1(1), EvConfig2(2) { } [ i > k ] / Action1() { [] }, Action2() {'
         with self.assertRaises(ValidationError) as context:
@@ -140,6 +148,14 @@ class TestingTransitionParser(unittest.TestCase):
         events, condition, actions = parser.get_transition_items()
         self.assertEqual(events, 'EvConfig1(1) { }, EvConfig2(2) { }')
         self.assertEqual(condition, 'i > k')
+        self.assertEqual(actions, 'Action1() { [] }, Action2()')
+
+    def test__EventArgBodyEventArgBody_ActionAction__Valid(self):
+        example = 'EvConfig1(1) { }, EvConfig2(2) { } / Action1() { [] }, Action2()'
+        parser = TransitionParser(example)
+        events, conditions, actions = parser.get_transition_items()
+        self.assertEqual(events, 'EvConfig1(1) { }, EvConfig2(2) { }')
+        self.assertEqual(conditions, '')
         self.assertEqual(actions, 'Action1() { [] }, Action2()')
 
     def test__EventArgEventArg_ActionAction_Condition__Invalid0(self):

@@ -1,9 +1,10 @@
 import unittest
 
-from fsm_tools.parsers.expression_parser import ExpressionParser
+
 from fsm_tools.parsers.expression_ast import Function, Value, Symbol, Operator, String, Indexer, Expression, Object, \
     FunctionCall, Lambda, Sequence
 from fsm_tools.exceptions import ValidationError
+from fsm_tools.parsers.expression_parser import ExpressionParser
 
 
 class TestingExpressionParser(unittest.TestCase):
@@ -15,17 +16,21 @@ class TestingExpressionParser(unittest.TestCase):
         """Currently nothing to do. Use it for reinitialization data after test"""
         pass
 
+    def test__Lambda__Valid(self):
+        example = "() -> {}"
+        parser = ExpressionParser(example)
+        ast = parser.get_ast()
+        self.assertEqual(type(ast), Lambda)
+        self.assertEqual(len(ast.params), 0)
+
     def test__ActionDefinitionArgType__Valid(self):
-        example = "Action2(int k)"
+        example = "Action2(k)"
         parser = ExpressionParser(example)
         ast = parser.get_ast()
         self.assertEqual(type(ast), FunctionCall)
         self.assertEqual(len(ast.args), 1)
-        self.assertEqual(type(ast.args[0]), Expression)
-        self.assertEqual(type(ast.args[0][0]), Symbol)
-        self.assertEqual(ast.args[0][0].name, 'int')
-        self.assertEqual(type(ast.args[0][1]), Symbol)
-        self.assertEqual(ast.args[0][1].name, 'k')
+        self.assertEqual(type(ast.args[0]), Symbol)
+        self.assertEqual(ast.args[0].name, 'k')
 
     def test__ActionArgValue__Valid(self):
         example = "Action2(2)"
@@ -52,6 +57,18 @@ class TestingExpressionParser(unittest.TestCase):
         self.assertEqual(len(ast[0].args), 0)
         self.assertEqual(type(ast[1]), FunctionCall)
         self.assertEqual(len(ast[1].args), 0)
+
+    def test__ActionEmpty_ActionEmpty_Lambda__Valid(self):
+        example = "Action(), Action2(), () -> {}"
+        parser = ExpressionParser(example)
+        ast = parser.get_ast()
+        self.assertEqual(type(ast), Sequence)
+        self.assertEqual(type(ast[0]), FunctionCall)
+        self.assertEqual(len(ast[0].args), 0)
+        self.assertEqual(type(ast[1]), FunctionCall)
+        self.assertEqual(len(ast[1].args), 0)
+        self.assertEqual(type(ast[2]), Lambda)
+        self.assertEqual(len(ast[2].params), 0)
 
     def test__ActionArgValue_ActionArgValue__Valid(self):
         example = "Action(2), Action2(2)"

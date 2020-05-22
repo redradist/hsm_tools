@@ -181,31 +181,3 @@ class PlantUMLParser:
             states, transitions = self._parse_instructions(instructions, root)
             self._tie_transitions_to_states(transitions, root)
             return states, transitions
-
-
-if __name__ == '__main__':
-    parser = PlantUMLParser()
-    states, transitions = parser.parse_uml_file('/home/redra/Projects/FSMTools/tests/simple_fsm/FSM.txt')
-    for state in states:
-        print("=================")
-        print("State name is " + state.name)
-        if state.parent_state is not None:
-            print("State parent is " + str(state.parent_state))
-            print("State parent name is " + str(state.parent_state.name))
-            print("State parent comment is " + str(state.parent_state.comment))
-        print("State comment is " + str(state.comment))
-        print("=================")
-    for transition in transitions:
-        print("Transition from: " + str(transition.from_state))
-        print("Transition to: " + str(transition.to_state))
-        print("Transition events:" + str(transition.event))
-        for ev in transition.event:
-            print("  Event: " + str(ev))
-        print("Transition actions: " + str(transition.action))
-        for ac in transition.action:
-            print("  Action: " + str(ac))
-        print("Transition condition: " + str(transition.condition))
-
-    # TODO(redra): Should be considered if needed to generate *.png
-    # from subprocess import call
-    # call(['java', '-jar', './plantuml.jar'])
